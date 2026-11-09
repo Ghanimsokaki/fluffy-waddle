@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemby AI · Hugging Face + OpenRouter</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">G</div>
+        <div>
+          <h1>Gemby AI</h1>
+          <p>HF + OpenRouter · MCP ready</p>
+        </div>
+      </div>
+
+      <section class="panel">
+        <label class="lbl" for="provider">Provider</label>
+        <select id="provider">
+          <option value="openrouter">OpenRouter (free models)</option>
+          <option value="huggingface">Hugging Face</option>
+        </select>
+
+        <label class="lbl" for="model">Model</label>
+        <div class="row">
+          <select id="model"></select>
+          <button id="refresh" class="icon" title="Refresh model list">⟳</button>
+        </div>
+        <input id="customModel" type="text" placeholder="or type any model id…" />
+        <div id="keyStatus" class="hint"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="lbl">MCP servers</span>
+          <button id="addServerToggle" class="mini">+ Add</button>
+        </div>
+        <div id="serverList" class="server-list"></div>
+
+        <form id="serverForm" class="server-form hidden">
+          <input id="sName" placeholder="Name (e.g. filesystem)" />
+          <select id="sTransport">
+            <option value="stdio">stdio (local command)</option>
+            <option value="http">http (remote url)</option>
+          </select>
+          <input id="sCommand" placeholder="command (e.g. npx)" />
+          <input id="sArgs" placeholder="args (space separated)" />
+          <input id="sUrl" class="hidden" placeholder="https://…/mcp" />
+          <button type="submit" class="primary">Save server</button>
+        </form>
+        <p class="hint">Tick a connected server to give the model its tools.</p>
+      </section>
+
+      <div class="sidebar-foot">
+        <span id="conn">connecting…</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div id="activeModel">No model selected</div>
+        <button id="clear" class="mini">Clear chat</button>
+      </header>
+      <div id="messages" class="messages">
+        <div class="welcome">
+          <h2>Welcome to Gemby AI</h2>
+          <p>Pick a free OpenRouter model (or a Hugging Face model) on the left, then start chatting.
+             Connect an MCP server to let the model call real tools.</p>
+        </div>
+      </div>
+      <form id="composer" class="composer">
+        <textarea id="input" rows="1" placeholder="Message Gemby…  (Enter to send, Shift+Enter for newline)"></textarea>
+        <button id="send" class="primary" type="submit">Send</button>
+        <button id="stop" class="mini hidden" type="button">Stop</button>
+      </form>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
