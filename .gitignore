@@ -1,0 +1,6 @@
+node_modules/
+.env
+.env.local
+mcp-servers.local.json
+npm-debug.log*
+.DS_Store

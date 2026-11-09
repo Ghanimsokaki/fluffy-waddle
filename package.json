@@ -1,0 +1,11 @@
+{
+  "name": "gemby-ai-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AI chat web app - Hugging Face + OpenRouter free models, with MCP tool support",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}
