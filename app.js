@@ -3,13 +3,23 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { providerConfig, listOpenRouterFreeModels, openRouterFallback, HF_CURATED_MODELS } from './src/providers.js';
+import { providerConfig, listOpenRouterFreeModels, openRouterFallback, listNvidiaModels, nvidiaFallback, HF_CURATED_MODELS } from './src/providers.js';
 import { McpManager } from './src/mcp.js';
 import { runAgent } from './src/agent.js';
+import { routeRequest, classifyTask } from './src/router.js';
+import { builtinTools, isBuiltinTool, callBuiltinTool } from './src/tools.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const mcp = new McpManager();
+
+// Ready-made MCP servers the user can add with one click.
+const MCP_PRESETS = [
+  { key: 'roblox', name: 'Roblox Studio', transport: 'stdio', command: 'npx', args: ['-y', 'robloxstudio-mcp'],
+    hint: 'Connect to Roblox Studio. Install the companion Studio plugin from the package, then Start.' },
+  { key: 'everything', name: 'Everything (demo)', transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-everything'],
+    hint: 'A demo server with sample tools (math, echo, …).' },
+];
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
@@ -21,7 +31,10 @@ app.get('/api/config', (_req, res) => {
     defaultModel: process.env.DEFAULT_MODEL || '',
     hasHuggingFace: !!process.env.HF_TOKEN,
     hasOpenRouter: !!process.env.OPENROUTER_API_KEY,
+    hasNvidia: !!process.env.NVIDIA_API_KEY,
     hasHfEndpoint: !!process.env.HF_ENDPOINT_URL,
+    hasTrellis: !!process.env.HF_TOKEN,
+    providers: ['auto', 'openrouter', 'nvidia', 'huggingface'],
   });
 });
 
@@ -29,15 +42,29 @@ app.get('/api/models', async (req, res) => {
   const provider = req.query.provider || 'openrouter';
   try {
     if (provider === 'huggingface') return res.json({ provider, models: HF_CURATED_MODELS });
+    if (provider === 'nvidia') return res.json({ provider, models: await listNvidiaModels() });
     const models = await listOpenRouterFreeModels();
     res.json({ provider, models });
   } catch (err) {
-    // Keep the UI usable offline with a small built-in free list.
+    // Keep the UI usable offline with a small built-in list.
+    if (provider === 'nvidia') return res.json({ provider, models: nvidiaFallback(), warning: String(err.message || err) });
     res.json({ provider: 'openrouter', models: openRouterFallback(), warning: String(err.message || err) });
   }
 });
 
+// ---- Router: decide which AI to use for a request ------------------------
+app.post('/api/route', async (req, res) => {
+  try {
+    const { messages, task } = req.body || {};
+    res.json(await routeRequest({ messages: Array.isArray(messages) ? messages : [], forcedTask: task }));
+  } catch (err) {
+    res.status(500).json({ error: String(err.message || err) });
+  }
+});
+app.get('/api/classify', (req, res) => res.json({ task: classifyTask(String(req.query.text || '')) }));
+
 // ---- MCP servers ---------------------------------------------------------
+app.get('/api/mcp/presets', (_req, res) => res.json(MCP_PRESETS));
 app.get('/api/mcp/servers', (_req, res) => res.json(mcp.list()));
 
 app.post('/api/mcp/servers', (req, res) => {
@@ -80,8 +107,20 @@ app.post('/api/chat', async (req, res) => {
   res.on('close', () => controller.abort());
 
   try {
-    if (!model) throw new Error('No model selected');
-    const cfg = providerConfig(provider);
+    const convo = Array.isArray(messages) ? messages : [];
+
+    // "auto" lets the router pick the right AI for this request.
+    let useProvider = provider;
+    let useModel = model;
+    if (provider === 'auto') {
+      const route = await routeRequest({ messages: convo });
+      useProvider = route.provider;
+      useModel = route.model || process.env.DEFAULT_MODEL || '';
+      send({ type: 'route', ...route, provider: useProvider, model: useModel });
+    }
+
+    if (!useModel) throw new Error('No model selected');
+    const cfg = providerConfig(useProvider);
     if (!cfg.apiKey) {
       throw new Error(`No API key configured on the server for ${cfg.label}. Add it to your environment variables.`);
     }
@@ -96,13 +135,18 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
+    const tools = [...builtinTools(), ...mcp.openAiTools(ids)];
+    const callTool = (name, args) => (isBuiltinTool(name)
+      ? callBuiltinTool(name, args, send)
+      : mcp.callTool(name, args));
+
     await runAgent({
-      provider,
-      model,
-      messages: Array.isArray(messages) ? messages : [],
-      tools: mcp.openAiTools(ids),
+      provider: useProvider,
+      model: useModel,
+      messages: convo,
+      tools,
       signal: controller.signal,
-      callTool: (name, args) => mcp.callTool(name, args),
+      callTool,
       onEvent: send,
     });
   } catch (err) {

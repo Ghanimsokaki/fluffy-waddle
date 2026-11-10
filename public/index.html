@@ -20,9 +20,12 @@
       <section class="panel">
         <label class="lbl" for="provider">Provider</label>
         <select id="provider">
+          <option value="auto">Auto (router picks the AI)</option>
           <option value="openrouter">OpenRouter (free models)</option>
+          <option value="nvidia">NVIDIA NIM</option>
           <option value="huggingface">Hugging Face</option>
         </select>
+        <p class="hint" id="routeHint">Auto routes each message: code → a code model, 3D → TRELLIS, else a chat model.</p>
 
         <label class="lbl" for="model">Model</label>
         <div class="row">
@@ -38,6 +41,7 @@
           <span class="lbl">MCP servers</span>
           <button id="addServerToggle" class="mini">+ Add</button>
         </div>
+        <div id="presets" class="presets"></div>
         <div id="serverList" class="server-list"></div>
 
         <form id="serverForm" class="server-form hidden">
@@ -78,6 +82,7 @@
       </form>
     </main>
   </div>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

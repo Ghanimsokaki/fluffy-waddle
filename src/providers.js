@@ -3,6 +3,7 @@
 
 const HF_BASE = () => process.env.HF_BASE_URL || 'https://router.huggingface.co/v1';
 const OR_BASE = () => process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+const NIM_BASE = () => process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
 
 export function providerConfig(provider) {
   if (provider === 'huggingface') {
@@ -19,6 +20,9 @@ export function providerConfig(provider) {
   }
   if (provider === 'openrouter') {
     return { name: 'openrouter', label: 'OpenRouter', baseUrl: OR_BASE(), apiKey: process.env.OPENROUTER_API_KEY || '' };
+  }
+  if (provider === 'nvidia') {
+    return { name: 'nvidia', label: 'NVIDIA NIM', baseUrl: NIM_BASE(), apiKey: process.env.NVIDIA_API_KEY || '' };
   }
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -71,6 +75,37 @@ export async function listOpenRouterFreeModels() {
 
 export function openRouterFallback() {
   return FREE_FALLBACK;
+}
+
+// ---------------------------------------------------------------------------
+// NVIDIA NIM (https://build.nvidia.com) - OpenAI-compatible at /v1.
+// The catalogue is public; only inference calls need NVIDIA_API_KEY.
+// ---------------------------------------------------------------------------
+const NIM_FALLBACK = [
+  { id: 'meta/llama-3.3-70b-instruct', name: 'Llama 3.3 70B Instruct' },
+  { id: 'meta/llama-3.1-405b-instruct', name: 'Llama 3.1 405B Instruct' },
+  { id: 'deepseek-ai/deepseek-r1', name: 'DeepSeek R1' },
+  { id: 'qwen/qwen2.5-coder-32b-instruct', name: 'Qwen2.5 Coder 32B' },
+  { id: 'mistralai/mixtral-8x22b-instruct-v0.1', name: 'Mixtral 8x22B' },
+].map((m) => ({ ...m, provider: 'nvidia' }));
+
+let nimCache = { at: 0, models: null };
+
+export async function listNvidiaModels() {
+  const now = Date.now();
+  if (nimCache.models && now - nimCache.at < 10 * 60 * 1000) return nimCache.models;
+  const res = await fetch(`${NIM_BASE()}/models`, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`NVIDIA NIM /models returned ${res.status}`);
+  const data = await res.json();
+  const models = (data.data || data.models || [])
+    .map((m) => ({ id: m.id, name: m.id.split('/').pop(), provider: 'nvidia' }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  nimCache = { at: now, models };
+  return models;
+}
+
+export function nvidiaFallback() {
+  return NIM_FALLBACK;
 }
 
 // Streaming chat completion. Yields raw OpenAI-style `delta` objects.
