@@ -38,6 +38,7 @@ async function loadConfig() {
   const keys = [];
   keys.push(cfg.hasHuggingFace ? '✔ Hugging Face key set' : '✖ Hugging Face key missing');
   keys.push(cfg.hasOpenRouter ? '✔ OpenRouter key set' : '✖ OpenRouter key missing');
+  if (cfg.hasHfEndpoint) keys.push('✔ HF Inference Endpoint set');
   $('keyStatus').innerHTML = keys.join('<br>');
 }
 

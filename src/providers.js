@@ -6,7 +6,16 @@ const OR_BASE = () => process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/
 
 export function providerConfig(provider) {
   if (provider === 'huggingface') {
-    return { name: 'huggingface', label: 'Hugging Face', baseUrl: HF_BASE(), apiKey: process.env.HF_TOKEN || '' };
+    // A dedicated Inference Endpoint (OpenAI-compatible /v1) takes priority over the
+    // shared router - this is how you serve a model the router will not host.
+    const endpoint = process.env.HF_ENDPOINT_URL;
+    return {
+      name: 'huggingface',
+      label: 'Hugging Face',
+      baseUrl: endpoint ? endpoint.replace(/\/+$/, '') : HF_BASE(),
+      apiKey: process.env.HF_TOKEN || '',
+      endpoint: !!endpoint,
+    };
   }
   if (provider === 'openrouter') {
     return { name: 'openrouter', label: 'OpenRouter', baseUrl: OR_BASE(), apiKey: process.env.OPENROUTER_API_KEY || '' };

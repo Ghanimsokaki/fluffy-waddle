@@ -15,18 +15,26 @@ const prefix = (id) => id.replace(/-/g, '').slice(0, 8);
 export class McpManager {
   constructor() {
     this.servers = new Map();
+    // On serverless hosts (Vercel) the filesystem is read-only and per-invocation,
+    // so servers are supplied statically through the MCP_SERVERS env var (JSON array).
+    this.readOnly = !!process.env.MCP_SERVERS;
     this.load();
   }
 
   load() {
-    try {
-      if (!fs.existsSync(STORE)) return;
-      const raw = JSON.parse(fs.readFileSync(STORE, 'utf8'));
-      for (const cfg of raw) this.servers.set(cfg.id, { cfg, client: null, tools: [] });
-    } catch { /* ignore corrupt store */ }
+    let list = [];
+    if (process.env.MCP_SERVERS) {
+      try { list = JSON.parse(process.env.MCP_SERVERS); } catch { list = []; }
+    } else {
+      try {
+        if (fs.existsSync(STORE)) list = JSON.parse(fs.readFileSync(STORE, 'utf8'));
+      } catch { /* ignore corrupt store */ }
+    }
+    for (const cfg of list) this.servers.set(cfg.id, { cfg, client: null, tools: [] });
   }
 
   save() {
+    if (this.readOnly) return;
     try {
       const arr = [...this.servers.values()].map((s) => s.cfg);
       fs.writeFileSync(STORE, JSON.stringify(arr, null, 2));
@@ -81,6 +89,17 @@ export class McpManager {
     const res = await client.listTools();
     s.tools = res.tools || [];
     return this.list().find((x) => x.id === id);
+  }
+
+  // Connect on demand (used on serverless hosts where connections do not persist).
+  async ensureConnected(id) {
+    const s = this.servers.get(id);
+    if (!s) throw new Error(`MCP server ${id} not found`);
+    if (s.client) return;
+    if (s.cfg.transport !== 'http' && process.env.VERCEL) {
+      throw new Error('stdio MCP servers cannot run on Vercel - use an http server or an always-on host');
+    }
+    await this.connect(id);
   }
 
   async disconnect(id) {
