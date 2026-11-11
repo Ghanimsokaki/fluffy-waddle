@@ -85,32 +85,40 @@ export function openRouterFallback() {
 // ---------------------------------------------------------------------------
 // NVIDIA NIM (https://build.nvidia.com) - OpenAI-compatible at /v1.
 // The catalogue is public; only inference calls need NVIDIA_API_KEY.
+//
+// Caveat: the public catalogue lists ~84 models, but an API key can only call
+// the ones enabled for that account - the rest return 404/410. So we keep an
+// allowlist of models VERIFIED to work with the configured key, and only route
+// to those. Add an id here once NVIDIA enables it for your account.
 // ---------------------------------------------------------------------------
-const NIM_FALLBACK = [
-  { id: 'meta/llama-3.3-70b-instruct', name: 'Llama 3.3 70B Instruct' },
-  { id: 'meta/llama-3.1-405b-instruct', name: 'Llama 3.1 405B Instruct' },
-  { id: 'deepseek-ai/deepseek-r1', name: 'DeepSeek R1' },
-  { id: 'qwen/qwen2.5-coder-32b-instruct', name: 'Qwen2.5 Coder 32B' },
-  { id: 'mistralai/mixtral-8x22b-instruct-v0.1', name: 'Mixtral 8x22B' },
-].map((m) => ({ ...m, provider: 'nvidia' }));
+const NIM_USABLE = [
+  'nvidia/nemotron-3.5-lightning-30b-a3b',
+  'nvidia/nemotron-3.5-bolt-e4b',
+  'nvidia/nemotron-3.5-super-vl-120b-a12b',
+  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
+].map((id) => ({ id, name: id.split('/').pop(), provider: 'nvidia' }));
 
 let nimCache = { at: 0, models: null };
 
 export async function listNvidiaModels() {
   const now = Date.now();
   if (nimCache.models && now - nimCache.at < 10 * 60 * 1000) return nimCache.models;
-  const res = await fetch(`${NIM_BASE()}/models`, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`NVIDIA NIM /models returned ${res.status}`);
-  const data = await res.json();
-  const models = (data.data || data.models || [])
-    .map((m) => ({ id: m.id, name: m.id.split('/').pop(), provider: 'nvidia' }))
-    .sort((a, b) => a.id.localeCompare(b.id));
-  nimCache = { at: now, models };
-  return models;
+  try {
+    const res = await fetch(`${NIM_BASE()}/models`, { headers: { Accept: 'application/json' } });
+    if (res.ok) {
+      const data = await res.json();
+      const live = new Set((data.data || data.models || []).map((m) => m.id));
+      // Only offer allow-listed models that still exist in the live catalogue.
+      const models = NIM_USABLE.filter((m) => live.has(m.id));
+      if (models.length) { nimCache = { at: now, models }; return models; }
+    }
+  } catch { /* offline - fall through to the allowlist */ }
+  nimCache = { at: now, models: NIM_USABLE };
+  return NIM_USABLE;
 }
 
 export function nvidiaFallback() {
-  return NIM_FALLBACK;
+  return NIM_USABLE;
 }
 
 // Streaming chat completion. Yields raw OpenAI-style `delta` objects.

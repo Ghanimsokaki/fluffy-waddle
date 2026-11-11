@@ -111,7 +111,11 @@ app.post('/api/chat', async (req, res) => {
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders?.();
 
-  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  let emitted = false;
+  const send = (obj) => {
+    if (obj && (obj.type === 'delta' || obj.type === 'tool_call')) emitted = true;
+    res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  };
   const controller = new AbortController();
   res.on('close', () => controller.abort());
 

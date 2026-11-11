@@ -36,18 +36,45 @@ export async function routerPool() {
   return pool;
 }
 
-// Preference order per task. A hint matches any model whose id contains it.
-const CODE_HINTS = ['north-mini-code', 'coder', 'codestral', 'deepseek', 'qwen', 'openrouter/free'];
-const REASON_HINTS = ['reasoning', 'nemotron', 'deepseek-r1', 'r1', 'qwq', 'openrouter/free'];
-const CHAT_HINTS = ['openrouter/free', 'nemotron', 'llama', 'qwen', 'gemma', 'liquid', 'flint'];
+// Per-task preference plan. Each step optionally pins a provider and matches a
+// substring of the model id, so the same model name on both providers can be
+// told apart (e.g. "nemotron-3.5-lightning" exists on both OpenRouter and NIM).
+const PLAN = {
+  code: [
+    { provider: 'openrouter', id: 'north-mini-code' },
+    { id: 'coder' },
+    { id: 'codestral' },
+    { id: 'deepseek' },
+    { id: 'qwen' },
+  ],
+  reasoning: [
+    { provider: 'nvidia', id: 'nemotron-3-nano-omni' },
+    { id: 'reasoning' },
+    { id: 'r1' },
+    { id: 'qwq' },
+  ],
+  chat: [
+    { provider: 'nvidia', id: 'nemotron-3.5-lightning' },
+    { id: 'nemotron' },
+    { id: 'llama' },
+    { id: 'qwen' },
+    { id: 'gemma' },
+  ],
+  creative: [
+    { id: 'gemma' },
+    { id: 'llama' },
+    { id: 'qwen' },
+  ],
+};
 
-function pick(pool, hints) {
-  if (!pool.length) return null;
-  for (const h of hints) {
-    const m = pool.find((x) => x.id.toLowerCase().includes(h));
+function pick(pool, task) {
+  const plan = PLAN[task] || PLAN.chat;
+  for (const step of plan) {
+    const m = pool.find((x) => (!step.provider || x.provider === step.provider) && x.id.toLowerCase().includes(step.id));
     if (m) return m;
   }
-  return pool[0];
+  // Nothing matched: fall back to OpenRouter's own healthy free router.
+  return pool.find((x) => x.id === 'openrouter/free') || pool[0] || null;
 }
 
 // Returns the chosen route for the latest user message.
@@ -61,7 +88,7 @@ export async function routeRequest({ messages = [], forcedTask } = {}) {
   // A 3D request still needs a chat model to drive the tool call, but the actual
   // 3D work is done by the built-in TRELLIS tool.
   if (task === '3d') {
-    const m = pick(pool, CHAT_HINTS);
+    const m = pick(pool, 'chat');
     return {
       task,
       provider: m?.provider || 'openrouter',
@@ -72,8 +99,7 @@ export async function routeRequest({ messages = [], forcedTask } = {}) {
     };
   }
 
-  const hints = task === 'code' ? CODE_HINTS : task === 'reasoning' ? REASON_HINTS : CHAT_HINTS;
-  const m = pick(pool, hints);
+  const m = pick(pool, task);
   const provider = m?.provider || 'openrouter';
   const model = m?.id || 'openrouter/free';
 
