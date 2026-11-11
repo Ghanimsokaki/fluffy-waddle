@@ -1,23 +1,10 @@
-// Provider layer: talks to Hugging Face's OpenAI-compatible router and to OpenRouter.
+// Provider layer: talks to OpenRouter and NVIDIA NIM (both OpenAI-compatible).
 // All API keys stay on the server (read from .env) and are never sent to the browser.
 
-const HF_BASE = () => process.env.HF_BASE_URL || 'https://router.huggingface.co/v1';
 const OR_BASE = () => process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
 const NIM_BASE = () => process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
 
 export function providerConfig(provider) {
-  if (provider === 'huggingface') {
-    // A dedicated Inference Endpoint (OpenAI-compatible /v1) takes priority over the
-    // shared router - this is how you serve a model the router will not host.
-    const endpoint = process.env.HF_ENDPOINT_URL;
-    return {
-      name: 'huggingface',
-      label: 'Hugging Face',
-      baseUrl: endpoint ? endpoint.replace(/\/+$/, '') : HF_BASE(),
-      apiKey: process.env.HF_TOKEN || '',
-      endpoint: !!endpoint,
-    };
-  }
   if (provider === 'openrouter') {
     return { name: 'openrouter', label: 'OpenRouter', baseUrl: OR_BASE(), apiKey: process.env.OPENROUTER_API_KEY || '' };
   }
@@ -26,21 +13,6 @@ export function providerConfig(provider) {
   }
   throw new Error(`Unknown provider: ${provider}`);
 }
-
-// Models published by the author of Gemby-2-agent, plus a few widely available chat models.
-export const HF_CURATED_MODELS = [
-  { id: 'Hwiiiiiiii/Gemby-2-agent', name: 'Gemby-2-agent (author, experimental)', note: 'Not served by HF serverless inference yet' },
-  { id: 'Hwiiiiiiii/gemby.v1', name: 'Gemby v1 (Qwen2.5-0.5B fine-tune)' },
-  { id: 'Hwiiiiiiii/gemby', name: 'Gemby (base)' },
-  { id: 'Hwiiiiiiii/gemby-1B-2026', name: 'Gemby-1B-2026' },
-  { id: 'Hwiiiiiiii/Gemby-14B-instruct', name: 'Gemby-14B-instruct (private)' },
-  { id: 'Ghanimtta/Gemby.45.omni', name: 'Gemby.45.omni' },
-  { id: 'meta-llama/Llama-3.2-3B-Instruct', name: 'Llama 3.2 3B Instruct' },
-  { id: 'google/gemma-3-4b-it', name: 'Gemma 3 4B IT' },
-  { id: 'Qwen/Qwen2.5-7B-Instruct', name: 'Qwen2.5 7B Instruct' },
-  { id: 'mistralai/Mistral-7B-Instruct-v0.3', name: 'Mistral 7B Instruct v0.3' },
-  { id: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', name: 'DeepSeek-R1 Distill Qwen 7B' },
-].map((m) => ({ ...m, provider: 'huggingface' }));
 
 const FREE_FALLBACK = [
   { id: 'google/gemma-4-31b-it:free', name: 'Gemma 4 31B IT (free)' },

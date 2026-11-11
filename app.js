@@ -3,9 +3,10 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { providerConfig, listOpenRouterFreeModels, openRouterFallback, listNvidiaModels, nvidiaFallback, HF_CURATED_MODELS } from './src/providers.js';
+import { providerConfig, listOpenRouterFreeModels, openRouterFallback, listNvidiaModels, nvidiaFallback } from './src/providers.js';
 import { McpManager } from './src/mcp.js';
 import { runAgent } from './src/agent.js';
+import { generate3D } from './src/gen3d.js';
 import { routeRequest, classifyTask, routerPool, textOf, hasImagePart } from './src/router.js';
 import { builtinTools, isBuiltinTool, callBuiltinTool } from './src/tools.js';
 
@@ -29,20 +30,19 @@ app.get('/api/config', (_req, res) => {
   res.json({
     defaultProvider: process.env.DEFAULT_PROVIDER || 'openrouter',
     defaultModel: process.env.DEFAULT_MODEL || '',
-    hasHuggingFace: !!process.env.HF_TOKEN,
     hasOpenRouter: !!process.env.OPENROUTER_API_KEY,
     hasNvidia: !!process.env.NVIDIA_API_KEY,
-    hasHfEndpoint: !!process.env.HF_ENDPOINT_URL,
+    // The 3D studio runs on the TRELLIS Space, which needs a Hugging Face token.
     hasTrellis: !!process.env.HF_TOKEN,
-    providers: ['auto', 'openrouter', 'nvidia', 'huggingface'],
+    providers: ['auto', 'openrouter', 'nvidia'],
   });
 });
 
-// One flat list of every model the app can talk to - there is no provider
-// picker in the UI. Each item carries the provider it belongs to internally so
-// /api/chat knows where to send it.
+// One flat list of every AI the app can talk to: OpenRouter free models plus
+// NVIDIA NIM. There is no provider picker in the UI - each item carries the
+// provider it belongs to internally so /api/chat knows where to send it.
 app.get('/api/models', async (_req, res) => {
-  const models = [...HF_CURATED_MODELS];
+  const models = [];
   const warnings = [];
   try {
     models.push(...await listOpenRouterFreeModels());
@@ -79,6 +79,28 @@ app.get('/api/route/models', async (_req, res) => {
   } catch (err) {
     res.json({ models: [], warning: String(err.message || err) });
   }
+});
+
+// ---- 3D model studio (server-sent events) --------------------------------
+// Dedicated text-to-3D endpoint driving the TRELLIS pipeline directly, so the
+// 3D tool works on its own without going through a chat model.
+app.post('/api/3d', async (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  try {
+    const prompt = String(req.body?.prompt || '').trim();
+    if (!prompt) throw new Error('Describe the 3D object you want to build.');
+    const r = await generate3D(prompt, (text) => send({ type: 'progress', text }));
+    send({ type: 'artifact', kind: '3d', ...r });
+  } catch (err) {
+    send({ type: 'error', message: String(err?.message || err) });
+  }
+  send({ type: 'done' });
+  res.end();
 });
 
 // ---- MCP servers ---------------------------------------------------------

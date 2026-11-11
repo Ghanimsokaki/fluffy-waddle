@@ -43,10 +43,8 @@ async function loadConfig() {
     : 'auto';
 
   const keys = [];
-  keys.push(cfg.hasHuggingFace ? '✔ Hugging Face key set' : '✖ Hugging Face key missing');
   keys.push(cfg.hasOpenRouter ? '✔ OpenRouter key set' : '✖ OpenRouter key missing');
   keys.push(cfg.hasNvidia ? '✔ NVIDIA NIM key set' : '✖ NVIDIA NIM key missing');
-  if (cfg.hasHfEndpoint) keys.push('✔ HF Inference Endpoint set');
   keys.push(cfg.hasTrellis ? '✔ TRELLIS 3D ready' : '✖ TRELLIS 3D needs HF_TOKEN');
   $('keyStatus').innerHTML = keys.join('<br>');
   syncModelUI();
@@ -541,6 +539,86 @@ function setupVoice() {
   };
 }
 
+// ---- 3D studio ------------------------------------------------------------
+// Switch between the chat view and the dedicated 3D view.
+function setView(which) {
+  const isChat = which === 'chat';
+  $('viewChat').classList.toggle('hidden', !isChat);
+  $('view3d').classList.toggle('hidden', isChat);
+  $('tabChat').classList.toggle('active', isChat);
+  $('tab3d').classList.toggle('active', !isChat);
+  $('clear').classList.toggle('hidden', !isChat);
+  closeNav();
+  if (isChat) $('input').focus();
+  else $('p3dPrompt').focus();
+}
+
+function studioStep(text, kind) {
+  const el = document.createElement('div');
+  el.className = `step${kind ? ` ${kind}` : ''}`;
+  el.textContent = text;
+  $('p3dLog').appendChild(el);
+  $('p3dLog').scrollTop = $('p3dLog').scrollHeight;
+  return el;
+}
+
+async function generate3DStudio() {
+  const prompt = $('p3dPrompt').value.trim();
+  if (!prompt) { $('p3dPrompt').focus(); return; }
+
+  const btn = $('p3dGo');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  $('p3dLog').innerHTML = '';
+  $('p3dResult').innerHTML = '';
+
+  try {
+    const res = await fetch('/api/3d', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!res.ok || !res.body) throw new Error(`Server returned ${res.status}`);
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    let lastStep = null;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n\n')) !== -1) {
+        const chunk = buf.slice(0, i);
+        buf = buf.slice(i + 2);
+        const line = chunk.split('\n').find((l) => l.startsWith('data:'));
+        if (!line) continue;
+        let ev;
+        try { ev = JSON.parse(line.slice(5).trim()); } catch { continue; }
+        if (ev.type === 'progress') {
+          lastStep = studioStep(ev.text);
+        } else if (ev.type === 'artifact') {
+          if (lastStep) lastStep.classList.add('done');
+          const wrap = document.createElement('div');
+          wrap.className = 'artifact';
+          wrap.innerHTML = `<div class="sub">${esc(ev.prompt || prompt)}</div>
+            <a href="${ev.url}" download="${esc(ev.file || 'model.glb')}" target="_blank" rel="noopener">⬇ Download ${esc(ev.file || 'model.glb')}${ev.bytes ? ` (${Math.round(ev.bytes / 1024)} KB)` : ''}</a>
+            <model-viewer src="${ev.url}" camera-controls auto-rotate shadow-intensity="1" style="width:100%;height:380px;margin-top:8px;background:#0e1116;border-radius:12px"></model-viewer>`;
+          $('p3dResult').appendChild(wrap);
+        } else if (ev.type === 'error') {
+          studioStep(`✖ ${ev.message}`, 'err');
+        }
+      }
+    }
+  } catch (err) {
+    studioStep(`✖ ${String(err.message || err)}`, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate 3D model';
+  }
+}
+
 // ---- wiring ---------------------------------------------------------------
 function wire() {
   $('model').onchange = (e) => {
@@ -561,6 +639,15 @@ function wire() {
   $('stop').onclick = () => state.controller?.abort();
   $('newChat').onclick = () => { newChat(); closeNav(); };
   $('clear').onclick = () => { newChat(); closeNav(); };
+
+  // Chat / 3D view tabs
+  $('tabChat').onclick = () => setView('chat');
+  $('tab3d').onclick = () => setView('3d');
+  $('p3dGo').onclick = generate3DStudio;
+  $('p3dSample').onclick = () => {
+    $('p3dPrompt').value = 'a low-poly red mushroom with a white spotted cap on a small grassy base';
+    $('p3dPrompt').focus();
+  };
 
   // image attachments (button or paste)
   $('attachBtn').onclick = () => $('fileInput').click();

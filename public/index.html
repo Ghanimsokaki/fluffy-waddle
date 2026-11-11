@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gemby AI · Hugging Face + OpenRouter</title>
+  <title>Gemby AI · OpenRouter + NVIDIA NIM</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -13,7 +13,7 @@
         <div class="logo">G</div>
         <div>
           <h1>Gemby AI</h1>
-          <p>HF + OpenRouter · MCP ready</p>
+          <p>OpenRouter + NVIDIA NIM · MCP ready</p>
         </div>
       </div>
 
@@ -71,30 +71,51 @@
     <main class="main">
       <header class="topbar">
         <button id="menuBtn" class="mini menu-btn" aria-label="Open settings menu">☰</button>
+        <div class="tabs">
+          <button id="tabChat" class="tab active" type="button">Chat</button>
+          <button id="tab3d" class="tab" type="button">3D</button>
+        </div>
         <div id="activeModel" class="grow">No model selected</div>
         <button id="clear" class="mini">New chat</button>
       </header>
-      <div id="messages" class="messages">
-        <div class="welcome">
-          <h2>Welcome to Gemby AI</h2>
-          <p>Pick a model on the left — or leave it on <b>Auto</b> and the router will choose the
-             right one for each message. Connect an MCP server to let the model call real tools.</p>
-        </div>
-      </div>
-      <form id="composer" class="composer">
-        <div id="attachments" class="attachments hidden"></div>
-        <div class="composer-row">
-          <textarea id="input" rows="1" placeholder="Message Gemby…  (Enter to send, Shift+Enter for newline)"></textarea>
-          <div class="cbtns">
-            <button type="button" id="attachBtn" class="icon" title="Attach an image">📎</button>
-            <button type="button" id="micBtn" class="icon" title="Voice input">🎤</button>
-            <button type="button" id="speakBtn" class="icon" title="Read replies aloud">🔊</button>
-            <button id="send" class="primary" type="submit">Send</button>
-            <button id="stop" class="mini hidden" type="button">Stop</button>
+
+      <div id="viewChat" class="view chat-view">
+        <div id="messages" class="messages">
+          <div class="welcome">
+            <h2>Welcome to Gemby AI</h2>
+            <p>Pick a model on the left — or leave it on <b>Auto</b> and the router will choose the
+               right one for each message. Connect an MCP server to let the model call real tools.</p>
           </div>
         </div>
-        <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
-      </form>
+        <form id="composer" class="composer">
+          <div id="attachments" class="attachments hidden"></div>
+          <div class="composer-row">
+            <textarea id="input" rows="1" placeholder="Message Gemby…  (Enter to send, Shift+Enter for newline)"></textarea>
+            <div class="cbtns">
+              <button type="button" id="attachBtn" class="icon" title="Attach an image">📎</button>
+              <button type="button" id="micBtn" class="icon" title="Voice input">🎤</button>
+              <button type="button" id="speakBtn" class="icon" title="Read replies aloud">🔊</button>
+              <button id="send" class="primary" type="submit">Send</button>
+              <button id="stop" class="mini hidden" type="button">Stop</button>
+            </div>
+          </div>
+          <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
+        </form>
+      </div>
+
+      <section id="view3d" class="view studio-view hidden">
+        <div class="studio">
+          <h2>3D Model Studio</h2>
+          <p class="hint">Describe an object — TRELLIS turns it into a real <b>.glb</b> mesh you can spin and download.</p>
+          <textarea id="p3dPrompt" rows="3" placeholder="e.g. a low-poly red mushroom with a white spotted cap"></textarea>
+          <div class="studio-actions">
+            <button id="p3dGo" class="primary" type="button">Generate 3D model</button>
+            <button id="p3dSample" class="mini" type="button">Try an example</button>
+          </div>
+          <div id="p3dLog" class="studio-log"></div>
+          <div id="p3dResult" class="studio-result"></div>
+        </div>
+      </section>
     </main>
   </div>
   <div id="backdrop" class="backdrop"></div>
