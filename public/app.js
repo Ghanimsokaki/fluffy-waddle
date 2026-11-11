@@ -299,6 +299,16 @@ function wire() {
     $('messages').innerHTML = '';
   };
 
+  // mobile: slide-out settings drawer
+  const appEl = document.querySelector('.app');
+  const setNav = (open) => {
+    appEl.classList.toggle('nav-open', open);
+    $('backdrop').classList.toggle('show', open);
+  };
+  $('menuBtn').onclick = () => setNav(!appEl.classList.contains('nav-open'));
+  $('backdrop').onclick = () => setNav(false);
+  window.matchMedia('(min-width: 769px)').addEventListener('change', (e) => { if (e.matches) setNav(false); });
+
   const input = $('input');
   input.oninput = () => {
     input.style.height = 'auto';
