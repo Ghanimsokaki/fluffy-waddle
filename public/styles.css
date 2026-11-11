@@ -173,10 +173,31 @@ button.preset { font-size: 12px; padding: 5px 9px; }
 
 .composer { display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 20px; border-top: 1px solid var(--border); background: var(--panel); }
 .composer-row { display: flex; gap: 10px; align-items: flex-end; }
-.composer textarea { resize: none; max-height: 200px; }
-.composer .primary { align-self: flex-end; padding: 11px 22px; }
-.cbtns { display: flex; gap: 6px; align-items: center; }
-.cbtns .icon { width: 42px; }
+.composer textarea {
+  resize: none;
+  min-height: 84px;
+  max-height: 280px;
+  border-radius: 16px;
+  padding: 16px 18px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.composer .primary {
+  align-self: flex-end;
+  padding: 0 26px;
+  height: 56px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.cbtns { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
+.cbtns .icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  font-size: 22px;
+  background: #0f1420;
+}
 .cbtns .icon.rec { border-color: var(--err); color: var(--err); animation: blink 1s steps(2) infinite; }
 .cbtns .icon.on { border-color: var(--accent); }
 
@@ -226,7 +247,8 @@ button.preset { font-size: 12px; padding: 5px 9px; }
     padding: 10px 12px;
     padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
-  .composer .primary { padding: 11px 16px; }
+  .composer .primary { height: 52px; padding: 0 20px; }
+  .cbtns .icon { width: 52px; height: 52px; font-size: 20px; }
 
   /* iOS zooms in on focus when inputs are < 16px */
   select, input, textarea { font-size: 16px; }
@@ -236,8 +258,8 @@ button.preset { font-size: 12px; padding: 5px 9px; }
   .brand h1 { font-size: 16px; }
   .msg .avatar { width: 26px; height: 26px; flex: 0 0 26px; font-size: 12px; }
   .composer { gap: 8px; }
-  .cbtns { gap: 4px; }
-  .cbtns .icon { width: 36px; font-size: 14px; }
-  .composer .primary { padding: 11px 12px; }
+  .cbtns { gap: 6px; }
+  .cbtns .icon { width: 46px; height: 46px; font-size: 18px; }
+  .composer .primary { height: 46px; padding: 0 14px; }
 }
 

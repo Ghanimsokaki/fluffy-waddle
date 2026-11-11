@@ -584,7 +584,7 @@ function wire() {
   const input = $('input');
   input.oninput = () => {
     input.style.height = 'auto';
-    input.style.height = `${Math.min(input.scrollHeight, 200)}px`;
+    input.style.height = `${Math.min(input.scrollHeight, 280)}px`;
   };
   input.onkeydown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
