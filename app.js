@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { providerConfig, listOpenRouterFreeModels, openRouterFallback, listNvidiaModels, nvidiaFallback, HF_CURATED_MODELS } from './src/providers.js';
 import { McpManager } from './src/mcp.js';
 import { runAgent } from './src/agent.js';
-import { routeRequest, classifyTask, routerPool } from './src/router.js';
+import { routeRequest, classifyTask, routerPool, textOf, hasImagePart } from './src/router.js';
 import { builtinTools, isBuiltinTool, callBuiltinTool } from './src/tools.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -22,7 +22,7 @@ const MCP_PRESETS = [
 ];
 
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/config', (_req, res) => {
@@ -38,18 +38,27 @@ app.get('/api/config', (_req, res) => {
   });
 });
 
-app.get('/api/models', async (req, res) => {
-  const provider = req.query.provider || 'openrouter';
+// One flat list of every model the app can talk to - there is no provider
+// picker in the UI. Each item carries the provider it belongs to internally so
+// /api/chat knows where to send it.
+app.get('/api/models', async (_req, res) => {
+  const models = [...HF_CURATED_MODELS];
+  const warnings = [];
   try {
-    if (provider === 'huggingface') return res.json({ provider, models: HF_CURATED_MODELS });
-    if (provider === 'nvidia') return res.json({ provider, models: await listNvidiaModels() });
-    const models = await listOpenRouterFreeModels();
-    res.json({ provider, models });
+    models.push(...await listOpenRouterFreeModels());
   } catch (err) {
-    // Keep the UI usable offline with a small built-in list.
-    if (provider === 'nvidia') return res.json({ provider, models: nvidiaFallback(), warning: String(err.message || err) });
-    res.json({ provider: 'openrouter', models: openRouterFallback(), warning: String(err.message || err) });
+    models.push(...openRouterFallback());
+    warnings.push(String(err.message || err));
   }
+  if (process.env.NVIDIA_API_KEY) {
+    try {
+      models.push(...await listNvidiaModels());
+    } catch (err) {
+      models.push(...nvidiaFallback());
+      warnings.push(String(err.message || err));
+    }
+  }
+  res.json({ models, warning: warnings.join('; ') || undefined });
 });
 
 // ---- Router: decide which AI to use for a request ------------------------
@@ -104,7 +113,7 @@ app.delete('/api/mcp/servers/:id', async (req, res) => {
 
 // ---- Chat (Server-Sent Events) -------------------------------------------
 app.post('/api/chat', async (req, res) => {
-  const { provider, model, messages, mcpServers } = req.body || {};
+  const { provider, model, messages, mcpServers, web } = req.body || {};
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -150,27 +159,42 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Only offer the 3D tool when the request is actually about 3D. Sending it
-    // on every turn makes chat models describe themselves as the TRELLIS
-    // pipeline (they just read the tool description back to the user).
+    // Only offer each tool when the request actually needs it. Sending the 3D /
+    // image tool on every turn makes chat models read the tool description back
+    // to the user (e.g. claiming to be TRELLIS).
     const lastUser = [...convo].reverse().find((m) => m.role === 'user');
-    const task = routeTask || classifyTask(typeof lastUser?.content === 'string' ? lastUser.content : '');
-    const builtin = task === '3d' ? builtinTools() : [];
+    const attachedImage = convo.some((m) => hasImagePart(m.content));
+    const task = routeTask || (attachedImage ? 'vision' : classifyTask(textOf(lastUser?.content)));
+    const builtin = builtinTools({ web: web !== false, threeD: task === '3d', image: task === 'image' });
 
     const tools = [...builtin, ...mcp.openAiTools(ids)];
     const callTool = (name, args) => (isBuiltinTool(name)
       ? callBuiltinTool(name, args, send)
       : mcp.callTool(name, args));
 
-    await runAgent({
-      provider: useProvider,
-      model: useModel,
+    const runOnce = (p, m) => runAgent({
+      provider: p,
+      model: m,
       messages: convo,
       tools,
       signal: controller.signal,
       callTool,
       onEvent: send,
     });
+
+    try {
+      await runOnce(useProvider, useModel);
+    } catch (err) {
+      // If an auto-routed provider fails before producing anything, retry on a
+      // known-good fallback instead of showing the user an error.
+      const canRetry = provider === 'auto' && !emitted && useProvider !== 'openrouter';
+      if (!canRetry) throw err;
+      const fbProvider = 'openrouter';
+      const fbModel = process.env.DEFAULT_MODEL || 'openrouter/free';
+      send({ type: 'route', task: routeTask, provider: fbProvider, model: fbModel,
+        reason: `${useProvider} failed (${String(err.message || err).slice(0, 120)}) — retrying on a fallback model.` });
+      await runOnce(fbProvider, fbModel);
+    }
   } catch (err) {
     send({ type: 'error', message: String(err?.message || err) });
   }

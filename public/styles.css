@@ -77,9 +77,20 @@ button.primary {
 }
 button:hover { filter: brightness(1.12); }
 .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); margin-top: 10px; cursor: pointer; }
+.check input { width: auto; }
 .hidden { display: none !important; }
 
 .server-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.chat-list { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; max-height: 220px; overflow-y: auto; }
+.chat-item {
+  display: flex; align-items: center; gap: 6px;
+  background: #0f1420; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 8px; cursor: pointer; font-size: 13px;
+}
+.chat-item.active { border-color: var(--accent); }
+.chat-item .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-item button { padding: 2px 6px; font-size: 11px; }
 .server {
   display: flex; align-items: center; gap: 8px;
   background: #0f1420; border: 1px solid var(--border); border-radius: 9px; padding: 8px;
@@ -160,9 +171,27 @@ button.preset { font-size: 12px; padding: 5px 9px; }
 .artifact .sub { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
 .artifact a { color: var(--accent); }
 
-.composer { display: flex; gap: 10px; padding: 14px 18px 20px; border-top: 1px solid var(--border); background: var(--panel); }
+.composer { display: flex; flex-direction: column; gap: 10px; padding: 14px 18px 20px; border-top: 1px solid var(--border); background: var(--panel); }
+.composer-row { display: flex; gap: 10px; align-items: flex-end; }
 .composer textarea { resize: none; max-height: 200px; }
 .composer .primary { align-self: flex-end; padding: 11px 22px; }
+.cbtns { display: flex; gap: 6px; align-items: center; }
+.cbtns .icon { width: 42px; }
+.cbtns .icon.rec { border-color: var(--err); color: var(--err); animation: blink 1s steps(2) infinite; }
+.cbtns .icon.on { border-color: var(--accent); }
+
+/* attached-image previews above the input */
+.attachments { display: flex; flex-wrap: wrap; gap: 8px; }
+.attachments .att { position: relative; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.attachments .att img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.attachments .att button {
+  position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; padding: 0;
+  line-height: 1; font-size: 12px; background: rgba(0, 0, 0, .65); color: #fff; border-color: transparent;
+}
+
+/* images inside a message bubble */
+.bubble .attached { max-width: 260px; max-height: 260px; border-radius: 8px; display: block; margin-bottom: 6px; }
+.bubble .gen-img { width: 100%; max-width: 460px; border-radius: 8px; display: block; margin: 6px 0; }
 
 /* backdrop behind the mobile drawer */
 .backdrop {
@@ -207,5 +236,8 @@ button.preset { font-size: 12px; padding: 5px 9px; }
   .brand h1 { font-size: 16px; }
   .msg .avatar { width: 26px; height: 26px; flex: 0 0 26px; font-size: 12px; }
   .composer { gap: 8px; }
+  .cbtns { gap: 4px; }
+  .cbtns .icon { width: 36px; font-size: 14px; }
+  .composer .primary { padding: 11px 12px; }
 }
 

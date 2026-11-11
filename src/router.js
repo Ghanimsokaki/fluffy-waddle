@@ -12,8 +12,23 @@
 
 import { listOpenRouterFreeModels, listNvidiaModels } from './providers.js';
 
+// Flatten an OpenAI-style message content (string or array of parts) to text.
+export function textOf(content) {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content.filter((p) => p?.type === 'text').map((p) => p.text || '').join(' ').trim();
+  }
+  return '';
+}
+
+// True when a message carries an uploaded/attached image.
+export function hasImagePart(content) {
+  return Array.isArray(content) && content.some((p) => p?.type === 'image_url' && p.image_url?.url);
+}
+
 const RULES = [
   { task: '3d', re: /\b(3d|three[- ]?d|mesh|glb|gltf|\.obj|sculpt|trellis|voxel|low[- ]?poly|game ?assets?|game ?models?|roblox ?(part|model|mesh|asset)s?|stl)\b/i },
+  { task: 'image', re: /\b(draw|paint|sketch|illustrate)\b|\b(generate|create|make|design|render)\b[^.]{0,24}\b(image|picture|photo|art|artwork|logo|icon|poster|wallpaper|illustration|meme)\b|\b(image|picture|photo|artwork|illustration) of\b|\b(logo|poster|wallpaper) for\b/i },
   { task: 'code', re: /\b(code|coding|program|function|method|class|debug|bug|refactor|script|api|endpoint|regex|sql|query|bash|shell|python|javascript|typescript|java|c\+\+|rust|golang|html|css|react|vue|node|compile|error|exception|stack ?trace|parse|algorithm|leetcode)\b/i },
   { task: 'reasoning', re: /\b(prove|derive|solve|calculate|math|equation|logic|reason|why|analy[sz]e|step by step|think through)\b/i },
   { task: 'creative', re: /\b(story|poem|essay|letter|blog|caption|song|lyric|joke|screenplay|write me)\b/i },
@@ -65,14 +80,32 @@ const PLAN = {
     { id: 'llama' },
     { id: 'qwen' },
   ],
+  vision: [
+    { provider: 'nvidia', id: 'nemotron-3.5-super-vl' },
+    { id: 'vision' },
+    { id: 'pixtral' },
+    { id: 'vl' },
+    { id: 'gemma-3' },
+    { id: 'qwen' },
+  ],
+  image: [
+    { provider: 'nvidia', id: 'nemotron-3.5-lightning' },
+    { id: 'nemotron' },
+    { id: 'llama' },
+    { id: 'qwen' },
+    { id: 'gemma' },
+  ],
 };
 
 function pick(pool, task) {
   const plan = PLAN[task] || PLAN.chat;
+  // For vision tasks only look at models that actually accept image input.
+  const candidates = task === 'vision' ? pool.filter((m) => m.vision) : pool;
   for (const step of plan) {
-    const m = pool.find((x) => (!step.provider || x.provider === step.provider) && x.id.toLowerCase().includes(step.id));
+    const m = candidates.find((x) => (!step.provider || x.provider === step.provider) && x.id.toLowerCase().includes(step.id));
     if (m) return m;
   }
+  if (task === 'vision' && candidates.length) return candidates[0];
   // Nothing matched: fall back to OpenRouter's own healthy free router.
   return pool.find((x) => x.id === 'openrouter/free') || pool[0] || null;
 }
@@ -80,8 +113,9 @@ function pick(pool, task) {
 // Returns the chosen route for the latest user message.
 export async function routeRequest({ messages = [], forcedTask } = {}) {
   const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-  const text = typeof lastUser?.content === 'string' ? lastUser.content : '';
-  const task = forcedTask || classifyTask(text);
+  const text = textOf(lastUser?.content);
+  const hasImage = messages.some((m) => hasImagePart(m.content));
+  const task = forcedTask || (hasImage ? 'vision' : classifyTask(text));
 
   const pool = await routerPool();
 
@@ -99,6 +133,20 @@ export async function routeRequest({ messages = [], forcedTask } = {}) {
     };
   }
 
+  // An image-generation request is handled by the built-in image tool, driven by
+  // a general chat model.
+  if (task === 'image') {
+    const m = pick(pool, 'image');
+    return {
+      task,
+      provider: m?.provider || 'openrouter',
+      model: m?.id || 'openrouter/free',
+      tool: 'generate_image',
+      builtin: true,
+      reason: 'Image-generation request detected → calling the built-in image tool.',
+    };
+  }
+
   const m = pick(pool, task);
   const provider = m?.provider || 'openrouter';
   const model = m?.id || 'openrouter/free';
@@ -107,6 +155,7 @@ export async function routeRequest({ messages = [], forcedTask } = {}) {
     code: 'Coding intent → picked a code-specialised model.',
     reasoning: 'Reasoning intent → picked a reasoning model.',
     creative: 'Creative intent → picked a general model.',
+    vision: 'Image attached → picked a vision (image-reading) model.',
     chat: 'General chat intent → picked a general model.',
   }[task] || 'Picked a general model.';
 

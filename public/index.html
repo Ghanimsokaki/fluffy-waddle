@@ -18,25 +18,26 @@
       </div>
 
       <section class="panel">
-        <label class="lbl" for="provider">Provider</label>
-        <select id="provider">
-          <option value="auto">Auto (router picks the AI)</option>
-          <option value="openrouter">OpenRouter (free models)</option>
-          <option value="nvidia">NVIDIA NIM</option>
-          <option value="huggingface">Hugging Face</option>
-        </select>
-        <p class="hint" id="routeHint">Auto routes each message: code → a code model, 3D → TRELLIS, else a chat model.</p>
-        <details id="routePool" class="pool hidden">
-          <summary>Auto-router list (<span id="routePoolCount">…</span>)</summary>
-          <div id="routePoolList" class="pool-list"></div>
-        </details>
+        <div class="panel-head">
+          <span class="lbl">Chats</span>
+          <button id="newChat" class="mini">+ New</button>
+        </div>
+        <div id="chatList" class="chat-list"></div>
+      </section>
 
+      <section class="panel">
         <label class="lbl" for="model">Model</label>
         <div class="row">
           <select id="model"></select>
           <button id="refresh" class="icon" title="Refresh model list">⟳</button>
         </div>
         <input id="customModel" type="text" placeholder="or type any model id…" />
+        <label class="check"><input type="checkbox" id="webToggle" checked /> Web access (search + read pages)</label>
+        <p class="hint" id="routeHint">Auto picks the model built for the job — code → a code model, reasoning → a reasoning model, 3D → TRELLIS, else a chat model.</p>
+        <details id="routePool" class="pool hidden">
+          <summary>Models Auto can pick (<span id="routePoolCount">…</span>)</summary>
+          <div id="routePoolList" class="pool-list"></div>
+        </details>
         <div id="keyStatus" class="hint"></div>
       </section>
 
@@ -71,19 +72,28 @@
       <header class="topbar">
         <button id="menuBtn" class="mini menu-btn" aria-label="Open settings menu">☰</button>
         <div id="activeModel" class="grow">No model selected</div>
-        <button id="clear" class="mini">Clear chat</button>
+        <button id="clear" class="mini">New chat</button>
       </header>
       <div id="messages" class="messages">
         <div class="welcome">
           <h2>Welcome to Gemby AI</h2>
-          <p>Pick a free OpenRouter model (or a Hugging Face model) on the left, then start chatting.
-             Connect an MCP server to let the model call real tools.</p>
+          <p>Pick a model on the left — or leave it on <b>Auto</b> and the router will choose the
+             right one for each message. Connect an MCP server to let the model call real tools.</p>
         </div>
       </div>
       <form id="composer" class="composer">
-        <textarea id="input" rows="1" placeholder="Message Gemby…  (Enter to send, Shift+Enter for newline)"></textarea>
-        <button id="send" class="primary" type="submit">Send</button>
-        <button id="stop" class="mini hidden" type="button">Stop</button>
+        <div id="attachments" class="attachments hidden"></div>
+        <div class="composer-row">
+          <textarea id="input" rows="1" placeholder="Message Gemby…  (Enter to send, Shift+Enter for newline)"></textarea>
+          <div class="cbtns">
+            <button type="button" id="attachBtn" class="icon" title="Attach an image">📎</button>
+            <button type="button" id="micBtn" class="icon" title="Voice input">🎤</button>
+            <button type="button" id="speakBtn" class="icon" title="Read replies aloud">🔊</button>
+            <button id="send" class="primary" type="submit">Send</button>
+            <button id="stop" class="mini hidden" type="button">Stop</button>
+          </div>
+        </div>
+        <input id="fileInput" type="file" accept="image/*" multiple class="hidden" />
       </form>
     </main>
   </div>

@@ -71,6 +71,8 @@ export async function listOpenRouterFreeModels() {
       name: m.name || m.id,
       provider: 'openrouter',
       contextLength: m.context_length || m.top_provider?.context_length,
+      // Accepts image input -> eligible to handle uploaded images.
+      vision: (m.architecture?.input_modalities || []).includes('image'),
       free: true,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -92,11 +94,11 @@ export function openRouterFallback() {
 // to those. Add an id here once NVIDIA enables it for your account.
 // ---------------------------------------------------------------------------
 const NIM_USABLE = [
-  'nvidia/nemotron-3.5-lightning-30b-a3b',
-  'nvidia/nemotron-3.5-bolt-e4b',
-  'nvidia/nemotron-3.5-super-vl-120b-a12b',
-  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
-].map((id) => ({ id, name: id.split('/').pop(), provider: 'nvidia' }));
+  { id: 'nvidia/nemotron-3.5-lightning-30b-a3b' },
+  { id: 'nvidia/nemotron-3.5-bolt-e4b' },
+  { id: 'nvidia/nemotron-3.5-super-vl-120b-a12b', vision: true },
+  { id: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning' },
+].map((m) => ({ name: m.id.split('/').pop(), provider: 'nvidia', ...m }));
 
 let nimCache = { at: 0, models: null };
 
