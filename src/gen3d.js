@@ -1,102 +1,76 @@
-// Text-to-3D via the TRELLIS.2 Space on Hugging Face.
-// Runs remotely on a (ZeroGPU) Space - nothing heavy runs on this server.
-// IMPORTANT: a Hugging Face token is required. Anonymous callers are capped to a
-// short GPU duration and the Space rejects the run; a signed-in token is allowed
-// the Space's full duration.
+// Text-to-3D via the Microsoft TRELLIS NIM hosted by NVIDIA.
+// Nothing heavy runs on this server - NVIDIA runs the model; we just send the
+// prompt and store the returned .glb mesh.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { Client } from '@gradio/client';
 
-const SPACE = process.env.TRELLIS_SPACE || 'prithivMLmods/TRELLIS.2-Text-to-3D';
+const ENDPOINT = process.env.NVIDIA_TRELLIS_URL || 'https://ai.api.nvidia.com/v1/genai/microsoft/trellis';
 const OUT_DIR = process.env.TRELLIS_OUT_DIR || path.resolve(process.cwd(), 'public', 'generated');
+const TRIES = 3;
 
-const DEFAULT_3D = {
-  seed: 0,
-  resolution: '1024',
-  decimation_target: 150000,
-  texture_size: 1024,
-  ss_guidance_strength: 7.5,
-  ss_guidance_rescale: 0.7,
-  ss_sampling_steps: 12,
-  ss_rescale_t: 5.0,
-  shape_guidance: 7.5,
-  shape_rescale: 0.5,
-  shape_steps: 12,
-  shape_rescale_t: 3.0,
-  tex_guidance: 1.0,
-  tex_rescale: 0.0,
-  tex_steps: 12,
-  tex_rescale_t: 3.0,
-};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Human-friendly message for the common ZeroGPU quota failures.
-function friendly(err) {
-  const msg = String(err?.message || err);
-  if (/ZeroGPU quota/i.test(msg)) {
-    return 'TRELLIS could not run: the free Hugging Face ZeroGPU quota for today is used up '
-      + '(one TRELLIS generation needs ~240s of GPU time). It resets daily; Hugging Face PRO raises the limit. '
-      + 'Original error: ' + msg;
-  }
-  if (/GPU duration|ZeroGPU|subscribe to Hugging Face PRO/i.test(msg)) {
-    return 'TRELLIS is a ZeroGPU Space, so it needs an authenticated Hugging Face token with available GPU quota. '
-      + 'Make sure HF_TOKEN is set (and open the Space once and click "Sign in"). Original error: ' + msg;
-  }
-  return msg;
+function apiKey() {
+  return process.env.NVIDIA_API_KEY || process.env.NVIDIA_NIM_API_KEY || '';
 }
 
-async function saveRemote(url, ext) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Could not download ${url} (${res.status})`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  const name = `${randomUUID().slice(0, 8)}${ext}`;
-  fs.writeFileSync(path.join(OUT_DIR, name), buf);
-  return { name, bytes: buf.length, url: `/generated/${name}` };
+// NVIDIA's trial TRELLIS endpoint occasionally answers 500 on a first hit
+// (cold start / GPU busy). Retry a couple of times before giving up.
+async function infer(prompt) {
+  if (!apiKey()) throw new Error('NVIDIA_API_KEY is not set, so the 3D model cannot be generated.');
+  let lastErr;
+  for (let attempt = 1; attempt <= TRIES; attempt += 1) {
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey()}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt, seed: 0 }),
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      const b64 = json?.artifacts?.[0]?.base64;
+      if (!b64) throw new Error('TRELLIS returned no 3D asset.');
+      return Buffer.from(b64, 'base64');
+    }
+
+    const body = await res.text().catch(() => '');
+    lastErr = new Error(`TRELLIS NIM responded ${res.status}${body ? `: ${body.slice(0, 200)}` : ''}`);
+    if (res.status < 500) throw lastErr;          // 4xx won't fix itself
+    if (attempt < TRIES) await sleep(1500 * attempt);
+  }
+  throw lastErr;
 }
 
 export async function generate3D(prompt, onProgress = () => {}) {
-  if (!prompt || !String(prompt).trim()) throw new Error('generate3D needs a text prompt');
-  const token = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
+  const text = String(prompt || '').trim();
+  if (!text) throw new Error('Describe the 3D object you want to build.');
 
-  onProgress(`Connecting to TRELLIS Space: ${SPACE}`);
-  const opts = token ? { token } : {}; // @gradio/client v2 renamed hf_token -> token
-  const client = await Client.connect(SPACE, opts);
+  onProgress(`Sending the prompt to NVIDIA TRELLIS (${ENDPOINT.replace(/^https?:\/\//, '')})`);
+  onProgress('Generating the 3D mesh — this usually takes 20-60 seconds');
+  const buf = await infer(text);
+  onProgress(`Mesh ready (${Math.round(buf.length / 1024)} KB)`);
 
   try {
-    onProgress('Starting GPU session');
-    await client.predict('/start_session', {});
-
-    onProgress('Generating a concept image from your prompt');
-    const img = await client.predict('/generate_txt2img', { prompt: String(prompt) });
-    const imageUrl = img.data?.[0];
-    if (!imageUrl) throw new Error('TRELLIS did not return an image');
-
-    onProgress('Pre-processing the image');
-    const pre = await client.predict('/preprocess_image', { input: imageUrl });
-    const processed = pre.data?.[0] || imageUrl;
-
-    onProgress('Building the 3D mesh (this usually takes 1-2 minutes)');
-    const out = await client.predict('/generate_3d', { image: processed, ...DEFAULT_3D });
-    const files = out.data?.[0];
-    const list = Array.isArray(files) ? files : [files];
-    const meshUrl = list.find((f) => typeof f === 'string' && /\.(glb|gltf)$/i.test(f))
-      || list.find((f) => typeof f === 'string');
-    if (!meshUrl) throw new Error('TRELLIS did not return a 3D file');
-
-    onProgress('Saving the model');
-    const ext = /\.gltf$/i.test(meshUrl) ? '.gltf' : '.glb';
-    try {
-      const saved = await saveRemote(meshUrl, ext);
-      onProgress(`Saved ${saved.name} (${Math.round(saved.bytes / 1024)} KB)`);
-      return { prompt, space: SPACE, file: saved.name, url: saved.url, bytes: saved.bytes };
-    } catch (saveErr) {
-      // Read-only filesystem (e.g. Vercel): hand back the hosted file link directly.
-      onProgress('Local storage unavailable — returning the hosted file link');
-      return { prompt, space: SPACE, file: meshUrl.split('/').pop() || `model${ext}`, url: meshUrl, bytes: null };
-    }
-  } catch (err) {
-    throw new Error(friendly(err));
+    fs.mkdirSync(OUT_DIR, { recursive: true });
+    const name = `${randomUUID().slice(0, 8)}.glb`;
+    fs.writeFileSync(path.join(OUT_DIR, name), buf);
+    onProgress(`Saved ${name}`);
+    return { prompt: text, engine: 'nvidia-nim-trellis', file: name, url: `/generated/${name}`, bytes: buf.length };
+  } catch {
+    // Read-only filesystem (e.g. Vercel): hand the mesh back as a data URL.
+    onProgress('Local storage unavailable — returning the model inline');
+    return {
+      prompt: text,
+      engine: 'nvidia-nim-trellis',
+      file: 'model.glb',
+      url: `data:model/gltf-binary;base64,${buf.toString('base64')}`,
+      bytes: buf.length,
+    };
   }
 }

@@ -45,7 +45,7 @@ async function loadConfig() {
   const keys = [];
   keys.push(cfg.hasOpenRouter ? '✔ OpenRouter key set' : '✖ OpenRouter key missing');
   keys.push(cfg.hasNvidia ? '✔ NVIDIA NIM key set' : '✖ NVIDIA NIM key missing');
-  keys.push(cfg.hasTrellis ? '✔ TRELLIS 3D ready' : '✖ TRELLIS 3D needs HF_TOKEN');
+  keys.push(cfg.has3d ? '✔ 3D model ready (NVIDIA TRELLIS)' : '✖ 3D model needs the NVIDIA key');
   $('keyStatus').innerHTML = keys.join('<br>');
   syncModelUI();
 }

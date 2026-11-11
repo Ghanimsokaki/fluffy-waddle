@@ -3,13 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "AI chat web app - Hugging Face + OpenRouter free models, with MCP tool support",
+  "description": "AI chat web app - OpenRouter free models + NVIDIA NIM, auto-router, 3D studio, MCP tools",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
   "dependencies": {
-    "@gradio/client": "^2.7.2",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",

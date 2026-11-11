@@ -116,7 +116,6 @@ button.preset { font-size: 12px; padding: 5px 9px; }
 .pool-list .m .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .03em; padding: 1px 5px; border-radius: 5px; flex: 0 0 auto; }
 .pool-list .m .tag.openrouter { background: #223052; color: #9db4ff; }
 .pool-list .m .tag.nvidia { background: #1f3a24; color: #7fdc9b; }
-.pool-list .m .tag.huggingface { background: #3a3320; color: #e6c86e; }
 .pool-list .m .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
 
 /* main */

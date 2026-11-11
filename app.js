@@ -32,8 +32,8 @@ app.get('/api/config', (_req, res) => {
     defaultModel: process.env.DEFAULT_MODEL || '',
     hasOpenRouter: !!process.env.OPENROUTER_API_KEY,
     hasNvidia: !!process.env.NVIDIA_API_KEY,
-    // The 3D studio runs on the TRELLIS Space, which needs a Hugging Face token.
-    hasTrellis: !!process.env.HF_TOKEN,
+    // The 3D studio runs on the NVIDIA TRELLIS NIM, which uses the NVIDIA key.
+    has3d: !!process.env.NVIDIA_API_KEY,
     providers: ['auto', 'openrouter', 'nvidia'],
   });
 });
