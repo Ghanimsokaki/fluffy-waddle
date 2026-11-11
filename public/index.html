@@ -26,6 +26,10 @@
           <option value="huggingface">Hugging Face</option>
         </select>
         <p class="hint" id="routeHint">Auto routes each message: code → a code model, 3D → TRELLIS, else a chat model.</p>
+        <details id="routePool" class="pool hidden">
+          <summary>Auto-router list (<span id="routePoolCount">…</span>)</summary>
+          <div id="routePoolList" class="pool-list"></div>
+        </details>
 
         <label class="lbl" for="model">Model</label>
         <div class="row">

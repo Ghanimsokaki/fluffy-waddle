@@ -52,6 +52,25 @@ function syncProviderUI() {
   $('customModel').disabled = auto;
   $('refresh').disabled = auto;
   $('routeHint').classList.toggle('hidden', !auto);
+  $('routePool').classList.toggle('hidden', !auto);
+}
+
+// The list of AIs the auto-router can choose from (OpenRouter + NVIDIA NIM).
+async function loadRoutePool() {
+  try {
+    const { models } = await (await fetch('/api/route/models')).json();
+    const or = models.filter((m) => m.provider === 'openrouter').length;
+    const nv = models.filter((m) => m.provider === 'nvidia').length;
+    $('routePoolCount').textContent = `${models.length} · OpenRouter ${or} + NVIDIA ${nv}`;
+    const list = $('routePoolList');
+    list.innerHTML = '';
+    for (const m of models) {
+      const el = document.createElement('div');
+      el.className = 'm';
+      el.innerHTML = `<span class="tag ${m.provider}">${m.provider === 'nvidia' ? 'NIM' : m.provider}</span><span class="id">${m.id}</span>`;
+      list.appendChild(el);
+    }
+  } catch { $('routePoolCount').textContent = 'unavailable'; }
 }
 
 async function loadModels() {
@@ -351,7 +370,7 @@ function wire() {
   $('sTransport').onchange({ target: $('sTransport') });
   try {
     await loadConfig();
-    await Promise.all([loadModels(), loadServers(), loadPresets()]);
+    await Promise.all([loadModels(), loadServers(), loadPresets(), loadRoutePool()]);
     $('conn').textContent = 'ready';
   } catch (err) {
     $('conn').textContent = 'offline';

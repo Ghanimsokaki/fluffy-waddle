@@ -96,6 +96,18 @@ button:hover { filter: brightness(1.12); }
 .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 button.preset { font-size: 12px; padding: 5px 9px; }
 
+/* auto-router model list */
+.pool { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.pool summary { cursor: pointer; color: var(--muted); }
+.pool summary:hover { color: var(--text); }
+.pool-list { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; max-height: 160px; overflow-y: auto; }
+.pool-list .m { display: flex; align-items: center; gap: 6px; }
+.pool-list .m .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .03em; padding: 1px 5px; border-radius: 5px; flex: 0 0 auto; }
+.pool-list .m .tag.openrouter { background: #223052; color: #9db4ff; }
+.pool-list .m .tag.nvidia { background: #1f3a24; color: #7fdc9b; }
+.pool-list .m .tag.huggingface { background: #3a3320; color: #e6c86e; }
+.pool-list .m .id { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+
 /* main */
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .topbar {

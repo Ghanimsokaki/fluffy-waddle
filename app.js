@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { providerConfig, listOpenRouterFreeModels, openRouterFallback, listNvidiaModels, nvidiaFallback, HF_CURATED_MODELS } from './src/providers.js';
 import { McpManager } from './src/mcp.js';
 import { runAgent } from './src/agent.js';
-import { routeRequest, classifyTask } from './src/router.js';
+import { routeRequest, classifyTask, routerPool } from './src/router.js';
 import { builtinTools, isBuiltinTool, callBuiltinTool } from './src/tools.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,6 +62,15 @@ app.post('/api/route', async (req, res) => {
   }
 });
 app.get('/api/classify', (req, res) => res.json({ task: classifyTask(String(req.query.text || '')) }));
+
+// The list of AIs the auto-router can choose from (OpenRouter + NVIDIA NIM).
+app.get('/api/route/models', async (_req, res) => {
+  try {
+    res.json({ models: await routerPool() });
+  } catch (err) {
+    res.json({ models: [], warning: String(err.message || err) });
+  }
+});
 
 // ---- MCP servers ---------------------------------------------------------
 app.get('/api/mcp/presets', (_req, res) => res.json(MCP_PRESETS));
