@@ -112,10 +112,12 @@ app.post('/api/chat', async (req, res) => {
     // "auto" lets the router pick the right AI for this request.
     let useProvider = provider;
     let useModel = model;
+    let routeTask = null;
     if (provider === 'auto') {
       const route = await routeRequest({ messages: convo });
       useProvider = route.provider;
       useModel = route.model || process.env.DEFAULT_MODEL || '';
+      routeTask = route.task;
       send({ type: 'route', ...route, provider: useProvider, model: useModel });
     }
 
@@ -135,7 +137,14 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    const tools = [...builtinTools(), ...mcp.openAiTools(ids)];
+    // Only offer the 3D tool when the request is actually about 3D. Sending it
+    // on every turn makes chat models describe themselves as the TRELLIS
+    // pipeline (they just read the tool description back to the user).
+    const lastUser = [...convo].reverse().find((m) => m.role === 'user');
+    const task = routeTask || classifyTask(typeof lastUser?.content === 'string' ? lastUser.content : '');
+    const builtin = task === '3d' ? builtinTools() : [];
+
+    const tools = [...builtin, ...mcp.openAiTools(ids)];
     const callTool = (name, args) => (isBuiltinTool(name)
       ? callBuiltinTool(name, args, send)
       : mcp.callTool(name, args));
