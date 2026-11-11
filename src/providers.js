@@ -59,8 +59,13 @@ export async function listOpenRouterFreeModels() {
   if (!res.ok) throw new Error(`OpenRouter /models returned ${res.status}`);
   const data = await res.json();
   const isFree = (v) => v === '0' || v === '0.0' || v === '0.00' || v === 0;
+  // Keep only text-output models (drops audio/music entries that are also priced 0).
+  const isTextOut = (m) => {
+    const out = m.architecture?.output_modalities;
+    return !out || (out.includes('text') && out.every((x) => x === 'text'));
+  };
   const models = (data.data || [])
-    .filter((m) => isFree(m.pricing?.prompt) && isFree(m.pricing?.completion))
+    .filter((m) => isFree(m.pricing?.prompt) && isFree(m.pricing?.completion) && isTextOut(m))
     .map((m) => ({
       id: m.id,
       name: m.name || m.id,

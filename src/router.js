@@ -19,9 +19,11 @@ export function classifyTask(text = '') {
   return 'chat';
 }
 
-const CODE_HINTS = ['coder', 'coding', 'codestral', 'qwen', 'deepseek', 'devstral', 'gpt-oss'];
-const REASON_HINTS = ['deepseek-r1', 'r1', 'qwq', 'reasoning', 'thinking', 'gpt-oss'];
-const CHAT_HINTS = ['gemma', 'llama', 'qwen', 'mistral', 'gpt-oss'];
+// Preference order for each task. "openrouter/free" is OpenRouter's own router
+// over healthy free models, so it is a reliable last resort.
+const CODE_HINTS = ['north-mini-code', 'coder', 'coding', 'codestral', 'qwen', 'deepseek', 'openrouter/free'];
+const REASON_HINTS = ['reasoning', 'nemotron', 'r1', 'qwq', 'openrouter/free'];
+const CHAT_HINTS = ['openrouter/free', 'nemotron', 'liquid', 'flint', 'gemma', 'llama', 'qwen'];
 
 function pickModel(models, hints) {
   if (!models?.length) return null;
@@ -44,7 +46,7 @@ export async function routeRequest({ messages = [], forcedTask } = {}) {
   // A 3D request still needs a chat model to drive the tool call, but the actual
   // 3D work is done by the built-in TRELLIS tool.
   if (task === '3d') {
-    const model = pickModel(free, CHAT_HINTS) || free[0]?.id || 'google/gemma-4-31b-it:free';
+    const model = pickModel(free, CHAT_HINTS) || free[0]?.id || 'openrouter/free';
     return {
       task,
       provider: 'openrouter',
@@ -56,14 +58,14 @@ export async function routeRequest({ messages = [], forcedTask } = {}) {
   }
 
   if (task === 'code') {
-    const model = pickModel(free, CODE_HINTS) || 'qwen/qwen-2.5-coder-32b-instruct:free';
+    const model = pickModel(free, CODE_HINTS) || 'openrouter/free';
     return { task, provider: 'openrouter', model, reason: 'Coding intent → picked a free code-specialised model.' };
   }
   if (task === 'reasoning') {
-    const model = pickModel(free, REASON_HINTS) || free[0]?.id || 'deepseek/deepseek-r1:free';
+    const model = pickModel(free, REASON_HINTS) || free[0]?.id || 'openrouter/free';
     return { task, provider: 'openrouter', model, reason: 'Reasoning intent → picked a free reasoning model.' };
   }
 
-  const model = pickModel(free, CHAT_HINTS) || free[0]?.id || 'google/gemma-4-31b-it:free';
+  const model = pickModel(free, CHAT_HINTS) || free[0]?.id || 'openrouter/free';
   return { task, provider: 'openrouter', model, reason: `General ${task} intent → default free model.` };
 }
