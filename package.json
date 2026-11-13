@@ -1,0 +1,14 @@
+{
+  "name": "fluffy-waddle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI chat with optional web search and Box MCP",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "build": "node build.js"
+  }
+}

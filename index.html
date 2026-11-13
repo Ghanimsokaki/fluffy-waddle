@@ -152,7 +152,9 @@ textarea{flex:1;border:0;outline:0;resize:none;background:none;color:inherit;fon
 #send{width:38px;height:38px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:18px;flex:none}
 #send:disabled{opacity:.45;cursor:not-allowed}
 .hint{max-width:780px;margin:6px auto 0;text-align:center;font-size:12px;color:var(--muted)}
-dialog{border:1px solid var(--border);border-radius:18px;background:var(--panel);color:var(--text);padding:22px;width:min(460px,92vw);box-shadow:var(--shadow)}
+dialog{max-height:90vh;overflow:auto;border:1px solid var(--border);border-radius:18px;background:var(--panel);color:var(--text);padding:22px;width:min(460px,92vw);box-shadow:var(--shadow)}
+.settings-editor{display:block;width:100%;height:110px;max-height:none;resize:vertical;border:1px solid var(--border);background:var(--bg);color:inherit;border-radius:10px;padding:9px;font:12px/1.5 monospace}
+.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 dialog::backdrop{background:rgba(10,10,20,.5);backdrop-filter:blur(3px)}
 dialog h3{margin:0 0 4px}dialog p{color:var(--muted);margin:0 0 6px;font-size:13px}
 dialog h4{margin:16px 0 0;font-size:14px}
@@ -285,7 +287,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
         <div class="card reveal" style="--d:.08s"><div class="ic">🧠</div><h3>Reasoning view</h3><p>Thinking models show their reasoning in a collapsible block instead of an empty reply.</p></div>
         <div class="card reveal" style="--d:.16s"><div class="ic">🩹</div><h3>Clear errors</h3><p>Bad key, rate limit or blocked request? You get a plain explanation and a retry button.</p></div>
         <div class="card reveal" style="--d:.24s"><div class="ic">🌗</div><h3>Light and dark</h3><p>Follows your system, with a manual switch.</p></div>
-        <div class="card reveal" style="--d:.32s"><div class="ic">💾</div><h3>Saved chats</h3><p>History and keys stay in your own browser.</p></div>
+        <div class="card reveal" style="--d:.32s"><div class="ic">💾</div><h3>Saved chats</h3><p>History and browser-entered keys are saved on your device.</p></div>
         <div class="card reveal" style="--d:.4s"><div class="ic">📱</div><h3>Mobile ready</h3><p>Slide-out sidebar and safe-area aware layout.</p></div>
       </div>
     </div>
@@ -309,7 +311,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
       <div class="reveal" style="--d:.1s;margin-top:22px"><a class="cta big" href="#chat">Open the chat</a></div>
     </div>
   </section>
-  <footer class="f">Fluffy Waddle · keys stay in your browser</footer>
+  <footer class="f">Fluffy Waddle · your chat, your choice</footer>
 </div>
 
 <div id="app">
@@ -354,13 +356,37 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 <div id="toast"></div>
 <dialog id="dlg">
   <h3>Settings</h3>
-  <p>Keys are saved only in this browser.</p>
+  <p>Browser keys are stored on this device. Server key status below shows presence only, not validity.</p>
+  <p id="server-key-status" role="status">Checking server key configuration…</p>
+  <p>Server credentials are usable by anyone who can access the API. Protect your deployment before adding shared keys or a Box token.</p>
   <h4>OpenRouter</h4>
   <label>API key</label><input id="k-or" type="password" placeholder="sk-or-v1-…">
   <h4>NVIDIA NIM</h4>
   <label>API key</label><input id="k-nv" type="password" placeholder="nvapi-…">
   <label>Proxy base URL</label><input id="u-nv" placeholder="/api/nvidia">
   <p>NVIDIA blocks direct browser requests (no CORS). The default <code>/api/nvidia</code> works when you run <code>node server.js</code>. Using a Cloudflare Worker? Paste its URL ending in <code>/v1</code>.</p>
+  <h4>Web search</h4>
+  <label><input id="web-search" type="checkbox" style="width:auto"> Enable OpenRouter web search</label>
+  <p>OpenRouter may charge for searches, even with free models. The model decides when to search. Not available with NVIDIA.</p>
+  <h4>box by Simular MCP</h4>
+  <label for="box-token">Simular box personal key</label><input id="box-token" type="password" autocomplete="off" placeholder="cb_…">
+  <p>Connects to Simular's cloud computer via the app server. Get a personal key at <a href="https://box.simular.ai/access" target="_blank" rel="noopener noreferrer">box.simular.ai/access</a>. Leave blank to use a configured server token. Tool results are sent to the AI provider. Every tool call requires approval.</p>
+  <button class="ghost" id="box-test" type="button">Test Simular box connection</button> <span id="box-status" role="status"></span>
+  <label><input id="box-enabled" type="checkbox" style="width:auto"> Allow Simular box tools in chat</label>
+  <h4>Other MCP servers</h4>
+  <p>Add an HTTPS Streamable HTTP MCP link or paste an <code>mcpServers</code> JSON configuration. Remote servers must allow browser CORS. Local commands, OAuth login and legacy SSE endpoints are not supported.</p>
+  <label for="mcp-name">Server name</label><input id="mcp-name" placeholder="my-server" autocomplete="off">
+  <label for="mcp-url">Server link</label><input id="mcp-url" placeholder="https://example.com/mcp" autocomplete="off">
+  <label for="mcp-token">Bearer token (optional)</label><input id="mcp-token" type="password" autocomplete="off">
+  <div class="settings-actions"><button class="ghost" id="mcp-add" type="button">Add link to JSON</button></div>
+  <label for="mcp-json">MCP configuration JSON</label><textarea class="settings-editor" id="mcp-json" spellcheck="false"></textarea>
+  <div class="settings-actions"><button class="ghost" id="mcp-test" type="button">Test enabled servers</button><span id="mcp-status" role="status"></span></div>
+  <p>Tokens are visible in the JSON editor and stored unencrypted in this browser. Connect only trusted servers; tool definitions and results go to your AI provider, and each tool call requires approval.</p>
+  <h4>Skills</h4>
+  <p>Enable and edit these reusable instruction skills. Enabled instructions are sent with each message. This does not run skill scripts or install skill packages.</p>
+  <div id="skill-toggles" aria-label="Enable skills"></div>
+  <label for="skills-json">Skills JSON (edit to add your own)</label><textarea class="settings-editor" id="skills-json" spellcheck="false"></textarea>
+  <p id="settings-error" role="alert"></p>
   <div class="row">
     <button class="ghost" id="s-cancel">Cancel</button>
     <button class="primary" id="s-save">Save</button>
@@ -380,18 +406,29 @@ const FALLBACK={
 };
 const NOT_CHAT=/embed|guard|safety|reward|parse|retriev|rerank|deplot|fuyu|vlm|topic-control|nemoguard|clip|paligemma/i;
 
+const DEFAULT_SKILLS=[
+  {name:'Coding',enabled:false,instructions:'Help with code carefully. Explain key decisions and suggest relevant tests.'},
+  {name:'Research',enabled:false,instructions:'Distinguish verified facts from uncertainty and cite available sources.'},
+  {name:'Writing',enabled:false,instructions:'Write clearly for the requested audience and keep the response well structured.'}
+];
 let chats=store.get('fw.chats',[]), cur=store.get('fw.cur',null);
-let cfg=Object.assign({provider:'openrouter',model:{},orKey:'',nvKey:'',nvUrl:'/api/nvidia'},store.get('fw.cfg2',{}));
+let cfg=Object.assign({provider:'openrouter',model:{},orKey:'',nvKey:'',nvUrl:'/api/nvidia',webSearch:false,boxEnabled:false,boxToken:'',mcpConfig:{mcpServers:{}},skills:DEFAULT_SKILLS},store.get('fw.cfg2',{}));
 let models={openrouter:FALLBACK.openrouter.slice(),nvidia:FALLBACK.nvidia.slice()};
 let busy=false, ctrl=null;
+let serverKeys={openrouter:false,nvidia:false,box:false};
+const serverConfigPromise=fetch('/api/config',{cache:'no-store'}).then(async r=>{
+  if(!r.ok)throw new Error('Server configuration unavailable');
+  const data=await r.json();serverKeys={openrouter:data.openrouter===true,nvidia:data.nvidia===true,box:data.box===true};
+  $('server-key-status').textContent='Server variables: OPENROUTER_API_KEY '+(serverKeys.openrouter?'configured':'not configured')+' · NVIDIA_API_KEY '+(serverKeys.nvidia?'configured':'not configured')+' · BOX_ACCESS_TOKEN '+(serverKeys.box?'configured':'not configured')+'. Presence only; not verified.';
+}).catch(()=>{$('server-key-status').textContent='Server key detection unavailable; use browser keys or run the app server.'});
 const uid=()=>Math.random().toString(36).slice(2,9);
 const active=()=>chats.find(c=>c.id===cur);
 const save=()=>{store.set('fw.chats',chats);store.set('fw.cur',cur)};
 const saveCfg=()=>store.set('fw.cfg2',cfg);
-const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- markdown (small) ---------- */
-function inline(s){return esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}
+function inline(s){return esc(s).replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)<>]+)\)/g,(_,label,url)=>`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')}
 function md(t){
   return t.split(/```/).map((p,i)=>{
     if(i%2){const nl=p.indexOf('\n');const body=nl>-1?p.slice(nl+1):p;return `<pre><button data-copy>Copy</button><code>${esc(body.replace(/\n$/,''))}</code></pre>`}
@@ -510,9 +547,9 @@ function renderAll(){renderList();renderChat();renderModels()}
 
 /* ---------- API ---------- */
 function endpoint(){
-  if(cfg.provider==='openrouter')return{url:OR_URL+'/chat/completions',key:cfg.orKey,name:'OpenRouter',
+  if(cfg.provider==='openrouter')return{url:cfg.orKey?OR_URL+'/chat/completions':'/api/openrouter/chat/completions',key:cfg.orKey,hasKey:!!cfg.orKey||serverKeys.openrouter,name:'OpenRouter',
     headers:{'HTTP-Referer':location.origin||'https://localhost','X-Title':'Fluffy Waddle'}};
-  return{url:cfg.nvUrl.replace(/\/$/,'')+'/chat/completions',key:cfg.nvKey,name:'NVIDIA NIM',headers:{}};
+  return{url:cfg.nvUrl.replace(/\/$/,'')+'/chat/completions',key:cfg.nvKey,hasKey:!!cfg.nvKey||(cfg.nvUrl.replace(/\/$/,'')==='/api/nvidia'&&serverKeys.nvidia),name:'NVIDIA NIM',headers:{}};
 }
 class UserError extends Error{constructor(m,hint){super(m);this.hint=hint}}
 function explain(status,body,name){
@@ -525,55 +562,142 @@ function explain(status,body,name){
   if(status>=500)return new UserError(`${name} had a server error (${status}). ${msg}`,'Try again or pick another model.');
   return new UserError(`${name} error ${status}: ${msg}`);
 }
-async function stream(history,bub){
-  const ep=endpoint(),model=cfg.model[cfg.provider];
-  if(!ep.key)throw new UserError(`No ${ep.name} API key yet.`,'Open Settings (⚙) and paste your key.');
-  if(!model)throw new UserError('No model selected.');
-  ctrl=new AbortController();
-  let r;
-  try{
-    r=await fetch(ep.url,{method:'POST',signal:ctrl.signal,
-      headers:{'Content-Type':'application/json',Accept:'text/event-stream',Authorization:'Bearer '+ep.key,...ep.headers},
-      body:JSON.stringify({model,stream:true,max_tokens:2048,messages:history.map(m=>({role:m.role,content:m.content}))})});
-  }catch(e){
-    if(e.name==='AbortError')throw e;
-    throw new UserError(`Could not reach ${ep.name}.`,cfg.provider==='nvidia'
-      ?'NVIDIA blocks direct browser calls. Run `node server.js` and open http://localhost:8080, or set a proxy URL in Settings.'
-      :'Check your internet connection.');
-  }
-  if(!r.ok)throw explain(r.status,await r.text(),ep.name);
-  const reader=r.body.getReader(),dec=new TextDecoder();
-  let buf='',text='',reason='',lastPaint=0;
-  const paint=(force)=>{
-    const now=performance.now();if(!force&&now-lastPaint<60)return;lastPaint=now;
-    const follow=nearBottom();
-    bub.classList.toggle('caret',!force);
-    bub.innerHTML=(reason?thinkHTML(reason):'')+(text?md(text):'<span class="dots"><i></i><i></i><i></i></span>');
-    if(follow)toBottom();
-  };
-  for(;;){
-    const {done,value}=await reader.read();
-    if(done)break;
-    buf+=dec.decode(value,{stream:true});
-    let i;
-    while((i=buf.indexOf('\n'))>=0){
-      const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
-      if(!line.startsWith('data:'))continue;
-      const d=line.slice(5).trim();if(d==='[DONE]')continue;
-      let j;try{j=JSON.parse(d)}catch{continue}
-      if(j.error)throw new UserError(`${ep.name}: ${j.error.message||JSON.stringify(j.error)}`.slice(0,300),'Try another model.');
-      const dl=j.choices?.[0]?.delta||{};
-      if(dl.content)text+=dl.content;
-      const rs=dl.reasoning_content||dl.reasoning;if(rs)reason+=rs;
-      paint(false);
+// Streamable HTTP MCP client. Arbitrary endpoints are called by the browser, never by the server proxy.
+function parseMcpConfig(raw){
+  let config;try{config=JSON.parse(raw)}catch{throw new UserError('MCP configuration must be valid JSON.')}
+  if(!config||typeof config!=='object'||Array.isArray(config)||!config.mcpServers||typeof config.mcpServers!=='object'||Array.isArray(config.mcpServers))throw new UserError('MCP JSON must contain an mcpServers object.');
+  const entries=Object.entries(config.mcpServers);if(entries.length>10)throw new UserError('Use at most 10 MCP servers.');
+  for(const [name,server] of entries){
+    if(!name.trim()||name.length>100||/[\x00-\x1f\x7f]/.test(name)||['__proto__','constructor','prototype'].includes(name)||!server||typeof server!=='object'||Array.isArray(server))throw new UserError('Each MCP server needs a name and configuration object.');
+    if(server.command||server.args||server.env)throw new UserError('Local command/stdio MCP servers are not supported: '+name);
+    if(server.type&&!['http','streamable-http','streamableHttp'].includes(server.type))throw new UserError('Only Streamable HTTP MCP servers are supported: '+name);
+    let url;try{url=new URL(server.url)}catch{throw new UserError('Enter a valid HTTPS MCP URL for '+name+'.')}
+    if(url.protocol!=='https:'||url.username||url.password||url.hash)throw new UserError('MCP URLs must use HTTPS and must not contain credentials or fragments: '+name);
+    if(server.disabled!==undefined&&typeof server.disabled!=='boolean')throw new UserError('The disabled value must be true or false: '+name);
+    if(server.headers!==undefined){
+      if(!server.headers||typeof server.headers!=='object'||Array.isArray(server.headers))throw new UserError('MCP headers must be a JSON object: '+name);
+      for(const [key,value] of Object.entries(server.headers)){
+        if(!/^[a-zA-Z0-9-]+$/.test(key)||typeof value!=='string'||/[\r\n]/.test(value)||/^(content-type|accept|mcp-session-id|mcp-protocol-version|host|cookie)$/i.test(key))throw new UserError('Invalid or reserved MCP header for '+name+'.');
+        if(/\$\{[^}]+\}/.test(value))throw new UserError('Environment variable placeholders are not supported in MCP headers: '+name);
+      }
     }
   }
-  paint(true);
-  if(!text.trim()){
-    if(reason.trim())text='_The model only returned reasoning and no final answer. Try again or pick another model._';
-    else throw new UserError('The model returned an empty reply.','Free models sometimes do this. Retry or pick another model.');
+  return config;
+}
+function parseSkills(raw){
+  let skills;try{skills=JSON.parse(raw)}catch{throw new UserError('Skills must be valid JSON.')}
+  if(!Array.isArray(skills)||skills.length>20)throw new UserError('Skills must be an array with at most 20 entries.');
+  for(const skill of skills)if(!skill||typeof skill.name!=='string'||!skill.name.trim()||skill.name.length>100||typeof skill.instructions!=='string'||skill.instructions.length>10000||(skill.enabled!==undefined&&typeof skill.enabled!=='boolean'))throw new UserError('Each skill needs a name, instructions and an optional true/false enabled value.');
+  return skills;
+}
+async function connectMcp(server,signal){
+  let session='',version='2025-03-26',id=0;
+  async function request(method,params,notification=false){
+    const headers={...(server.headers||{}),'Content-Type':'application/json',Accept:'application/json, text/event-stream'};
+    if(session)headers['Mcp-Session-Id']=session;
+    if(method!=='initialize')headers['Mcp-Protocol-Version']=version;
+    const body={jsonrpc:'2.0',method,params};if(!notification)body.id=++id;
+    let r;try{r=await fetch(server.url,{method:'POST',headers,body:JSON.stringify(body),signal,credentials:'omit',redirect:'error'});}catch(e){if(e.name==='AbortError')throw e;throw new UserError('Could not reach MCP server '+server.name+'.','Check the URL, HTTPS, CORS, and your connection.');}
+    if(!r.ok)throw new UserError('MCP server '+server.name+' failed ('+r.status+').','Check its credentials and permissions.');
+    if(r.headers.get('mcp-session-id'))session=r.headers.get('mcp-session-id');
+    if(notification||r.status===202)return null;
+    let data;
+    if((r.headers.get('content-type')||'').includes('text/event-stream')){
+      const reader=r.body.getReader(),decoder=new TextDecoder();let buffer='',eventLines=[],size=0;
+      const event=()=>{if(!eventLines.length)return;try{const j=JSON.parse(eventLines.join('\n'));if(j.id===body.id)data=j}catch{}eventLines=[]};
+      try{
+        while(!data){const {done,value}=await reader.read();buffer+=decoder.decode(value||new Uint8Array(),{stream:!done});size+=value?.length||0;if(size>2_000_000)throw new UserError('MCP response from '+server.name+' is too large.');
+          let i;while((i=buffer.indexOf('\n'))>=0&&!data){const line=buffer.slice(0,i).replace(/\r$/,'');buffer=buffer.slice(i+1);if(!line)event();else if(line.startsWith('data:'))eventLines.push(line.slice(5).replace(/^ /,''));}
+          if(done){if(buffer.startsWith('data:'))eventLines.push(buffer.slice(5).trimStart());event();break;}
+        }
+      }finally{reader.cancel().catch(()=>{});}
+    }else {try{data=JSON.parse(await r.text())}catch{}}
+    if(!data||data.id!==body.id)throw new UserError('Invalid MCP response from '+server.name+'.');
+    if(data.error)throw new UserError('MCP server '+server.name+': '+(data.error.message||'Request failed'));
+    return data.result;
   }
-  return{content:text,reasoning:reason};
+  const init=await request('initialize',{protocolVersion:version,capabilities:{},clientInfo:{name:'fluffy-waddle',version:'1.0.0'}});
+  if(!init||typeof init.protocolVersion!=='string')throw new UserError('Invalid MCP initialization from '+server.name+'.');
+  version=init.protocolVersion;
+  await request('notifications/initialized',{},true);
+  let tools=[],cursor,pages=0;
+  do{const page=await request('tools/list',cursor?{cursor}:{});if(!page||!Array.isArray(page.tools))throw new UserError('Invalid tools list from '+server.name+'.');tools.push(...page.tools);cursor=page.nextCursor;if(tools.length>200||++pages>20)throw new UserError('MCP server '+server.name+' returned too many tools or pages.');}while(cursor);
+  return {tools,request};
+}
+async function connectBox(token,signal){
+  await serverConfigPromise;
+  if(!token&&!serverKeys.box)throw new UserError('Add a Simular box personal key in Settings or configure BOX_ACCESS_TOKEN on the server.');
+  return connectMcp({name:'Simular box',url:'/api/box',headers:token?{Authorization:'Bearer '+token}:{}},signal);
+}
+async function stream(history,bub){
+  await serverConfigPromise;
+  const ep=endpoint(),model=cfg.model[cfg.provider];
+  if(!ep.hasKey)throw new UserError(`No ${ep.name} API key yet.`,'Add a browser key in Settings or configure the server environment variable.');
+  if(!model)throw new UserError('No model selected.');
+  if(cfg.webSearch&&cfg.provider!=='openrouter')throw new UserError('Web search is only available with OpenRouter.','Switch providers or turn off web search in Settings.');
+  ctrl=new AbortController();
+  const messages=history.map(m=>({role:m.role,content:m.content}));
+  const skills=parseSkills(JSON.stringify(cfg.skills||[])).filter(s=>s.enabled);
+  if(skills.length)messages.unshift({role:'system',content:'User-selected skills (instructions):\n\n'+skills.map(s=>s.name+':\n'+s.instructions).join('\n\n')});
+  const servers=[];
+  if(cfg.boxEnabled){bub.textContent='Connecting to Simular box…';servers.push({name:'Simular box',connection:await connectBox(cfg.boxToken,ctrl.signal)});}
+  const mcp=parseMcpConfig(JSON.stringify(cfg.mcpConfig||{mcpServers:{}}));
+  for(const [name,server] of Object.entries(mcp.mcpServers))if(!server.disabled){bub.textContent='Connecting to '+name+'…';servers.push({name,connection:await connectMcp({...server,name},ctrl.signal)});}
+  const registered=[];
+  for(const server of servers)for(const tool of server.connection.tools){
+    if(!tool||typeof tool.name!=='string'||!tool.name||tool.name.length>128||/[\x00-\x1f\x7f]/.test(tool.name))throw new UserError('MCP server '+server.name+' returned an invalid tool name.');
+    const alias='fw_mcp_'+registered.length;
+    registered.push({alias,tool,server});if(registered.length>200)throw new UserError('Too many MCP tools across enabled servers. Disable some servers.');
+  }
+  const tools=registered.map(({alias,tool,server})=>({type:'function',function:{name:alias,description:'['+server.name+' / '+tool.name+'] '+(tool.description||''),parameters:tool.inputSchema||{type:'object',properties:{}}}}));
+  if(cfg.webSearch)tools.push({type:'openrouter:web_search'});
+  let reason='',text='',citations=[];
+  for(let round=0;round<6;round++){
+    let r;
+    try{
+      const body={model,stream:true,max_tokens:2048,messages};if(tools.length)body.tools=tools;
+      r=await fetch(ep.url,{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json',Accept:'text/event-stream',...(ep.key?{Authorization:'Bearer '+ep.key}:{}),...ep.headers},body:JSON.stringify(body)});
+    }catch(e){if(e.name==='AbortError')throw e;throw new UserError(`Could not reach ${ep.name}.`,'Check your connection and proxy settings.');}
+    if(!r.ok)throw explain(r.status,await r.text(),ep.name);
+    const reader=r.body.getReader(),dec=new TextDecoder();let buf='',calls=[],lastPaint=0;
+    text='';reason='';citations=[];
+    const paint=force=>{const now=performance.now();if(!force&&now-lastPaint<60)return;lastPaint=now;const follow=nearBottom();bub.classList.toggle('caret',!force);bub.innerHTML=(reason?thinkHTML(reason):'')+(text?md(text):'<span class="dots"><i></i><i></i><i></i></span>');if(follow)toBottom()};
+    function lineEvent(line){
+      if(!line.startsWith('data:'))return;const d=line.slice(5).trim();if(!d||d==='[DONE]')return;
+      let j;try{j=JSON.parse(d)}catch{return}
+      if(j.error)throw new UserError(`${ep.name}: ${j.error.message||JSON.stringify(j.error)}`.slice(0,300));
+      const dl=j.choices?.[0]?.delta||{};
+      if(dl.content)text+=dl.content;
+      const rs=dl.reasoning_content||dl.reasoning;if(typeof rs==='string')reason+=rs;
+      if(Array.isArray(dl.annotations))citations.push(...dl.annotations);
+      for(const c of dl.tool_calls||[]){const i=c.index??0;calls[i] ||= {id:'',type:'function',function:{name:'',arguments:''}};if(c.id)calls[i].id+=c.id;if(c.function?.name)calls[i].function.name+=c.function.name;if(c.function?.arguments)calls[i].function.arguments+=c.function.arguments;}
+      paint(false);
+    }
+    for(;;){const {done,value}=await reader.read();buf+=dec.decode(value||new Uint8Array(),{stream:!done});let i;while((i=buf.indexOf('\n'))>=0){lineEvent(buf.slice(0,i).trim());buf=buf.slice(i+1)}if(done){if(buf.trim())lineEvent(buf.trim());break}}
+    paint(true);
+    calls=calls.filter(Boolean);
+    if(!calls.length){
+      if(!text.trim()){if(reason.trim())text='_The model only returned reasoning and no final answer. Try again or pick another model._';else throw new UserError('The model returned an empty reply.','Try another model.');}
+      const links=[];for(const a of citations){const c=a.url_citation||a;try{const u=new URL(c.url);if((u.protocol==='https:'||u.protocol==='http:')&&!links.some(x=>x.url===u.href))links.push({url:u.href,title:c.title||u.hostname})}catch{}}
+      if(links.length)text+='\n\nSources:\n'+links.map(c=>'- ['+c.title.replace(/[\[\]\n]/g,'')+']('+c.url.replace(/[()\s]/g,encodeURIComponent)+')').join('\n');
+      bub.innerHTML=(reason?thinkHTML(reason):'')+md(text);
+      return{content:text,reasoning:reason};
+    }
+    messages.push({role:'assistant',content:text||null,tool_calls:calls});
+    for(const call of calls){
+      const entry=registered.find(t=>t.alias===call.function.name);let result;
+      if(!entry)result='Tool is not available.';
+      else{
+        let args;try{args=JSON.parse(call.function.arguments||'{}')}catch{args=null}
+        if(!args||typeof args!=='object'||Array.isArray(args))result='Invalid tool arguments.';
+        else if(JSON.stringify(args).length>3000)result='Tool arguments are too large to approve safely.';
+        else if(!confirm('Allow MCP tool "'+entry.tool.name+'" from "'+entry.server.name+'"?\n\nArguments: '+JSON.stringify(args)+'\n\nThis action may change data or run commands. Its result will be sent to '+ep.name+'.'))result='User denied this tool call.';
+        else {bub.textContent='Running '+entry.server.name+' tool: '+entry.tool.name+'…';const response=await entry.server.connection.request('tools/call',{name:entry.tool.name,arguments:args});if(Array.isArray(response.content))response.content=response.content.map(part=>part.type==='image'||part.type==='audio'?{type:'text',text:'[Image or audio omitted: this app supports text tool results only.]'}:part);result=JSON.stringify(response);if(result.length>50000)result=result.slice(0,50000)+' [truncated]';}
+      }
+      messages.push({role:'tool',tool_call_id:call.id,content:result});
+    }
+  }
+  throw new UserError('Tool call limit reached.','Try a more specific request.');
 }
 function showError(bub,e){
   bub.classList.remove('caret');
@@ -655,10 +779,32 @@ $('theme').onclick=()=>{
   root.dataset.theme=dark?'light':'dark';store.set('fw.theme',root.dataset.theme);
 };
 const th=store.get('fw.theme',null);if(th)document.documentElement.dataset.theme=th;
-$('settings').onclick=()=>{$('k-or').value=cfg.orKey;$('k-nv').value=cfg.nvKey;$('u-nv').value=cfg.nvUrl;$('dlg').showModal()};
+$('settings').onclick=()=>{$('k-or').value=cfg.orKey;$('k-nv').value=cfg.nvKey;$('u-nv').value=cfg.nvUrl;$('web-search').checked=cfg.webSearch;$('box-enabled').checked=cfg.boxEnabled;$('box-token').value=cfg.boxToken;$('box-status').textContent='';$('mcp-status').textContent='';$('settings-error').textContent='';$('mcp-name').value='';$('mcp-url').value='';$('mcp-token').value='';$('mcp-json').value=JSON.stringify(cfg.mcpConfig||{mcpServers:{}},null,2);$('skills-json').value=JSON.stringify(cfg.skills||DEFAULT_SKILLS,null,2);renderSkillToggles();$('dlg').showModal()};
+$('box-test').onclick=async()=>{if(busy){$('box-status').textContent='Wait for the current reply to finish.';return}const b=$('box-test');b.disabled=true;$('box-status').textContent='Connecting…';try{const box=await connectBox($('box-token').value.trim());$('box-status').textContent='Connected: '+box.tools.length+' tools available.'}catch(e){$('box-status').textContent=e.message}finally{b.disabled=false}};
+function renderSkillToggles(){
+  const container=$('skill-toggles');container.replaceChildren();
+  let skills;try{skills=parseSkills($('skills-json').value)}catch{return}
+  skills.forEach((skill,i)=>{const label=document.createElement('label'),box=document.createElement('input');box.type='checkbox';box.style.width='auto';box.checked=!!skill.enabled;box.onchange=()=>{const current=parseSkills($('skills-json').value);current[i].enabled=box.checked;$('skills-json').value=JSON.stringify(current,null,2)};label.append(box,document.createTextNode(' '+skill.name));container.appendChild(label);});
+}
+$('skills-json').oninput=renderSkillToggles;
+$('mcp-add').onclick=()=>{try{
+  const config=parseMcpConfig($('mcp-json').value),name=$('mcp-name').value.trim(),url=$('mcp-url').value.trim(),token=$('mcp-token').value.trim();
+  if(!name)throw new UserError('Enter a server name.');
+  if(Object.hasOwn(config.mcpServers,name))throw new UserError('A server with that name already exists.');
+  config.mcpServers[name]={url,...(token?{headers:{Authorization:'Bearer '+token}}:{})};
+  parseMcpConfig(JSON.stringify(config));$('mcp-json').value=JSON.stringify(config,null,2);$('mcp-token').value='';$('mcp-status').textContent='Added. Save settings to keep it.';
+}catch(e){$('mcp-status').textContent=e.message}};
+$('mcp-test').onclick=async()=>{if(busy){$('mcp-status').textContent='Wait for the current reply to finish.';return}const b=$('mcp-test');b.disabled=true;try{
+  const config=parseMcpConfig($('mcp-json').value),servers=Object.entries(config.mcpServers).filter(([,server])=>!server.disabled);
+  if(!servers.length)throw new UserError('No enabled MCP servers to test.');
+  let results=[];for(const [name,server] of servers){$('mcp-status').textContent='Testing '+name+'…';const conn=await connectMcp({...server,name});results.push(name+': '+conn.tools.length+' tools');}
+  $('mcp-status').textContent='Connected: '+results.join('; ');
+}catch(e){$('mcp-status').textContent=e.message}finally{b.disabled=false}};
 $('s-cancel').onclick=()=>$('dlg').close();
 $('s-save').onclick=()=>{
-  cfg.orKey=$('k-or').value.trim();cfg.nvKey=$('k-nv').value.trim();cfg.nvUrl=$('u-nv').value.trim()||'/api/nvidia';
+  let mcpConfig,skills;try{mcpConfig=parseMcpConfig($('mcp-json').value);skills=parseSkills($('skills-json').value)}catch(e){$('settings-error').textContent=e.message;return}
+  cfg.mcpConfig=mcpConfig;cfg.skills=skills;
+  cfg.orKey=$('k-or').value.trim();cfg.nvKey=$('k-nv').value.trim();cfg.nvUrl=$('u-nv').value.trim()||'/api/nvidia';cfg.webSearch=$('web-search').checked;cfg.boxEnabled=$('box-enabled').checked;cfg.boxToken=$('box-token').value.trim();
   saveCfg();$('dlg').close();loadModels();
 };
 renderModels();route();loadModels();
