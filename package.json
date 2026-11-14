@@ -8,10 +8,13 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node --test test/*.test.js",
     "build": "node build.js",
+    "test": "node --test test/*.test.js",
+    "test:rls": "bash supabase/tests/run_local.sh",
+    "check": "node scripts/check.js",
     "prestart": "npm run build",
-    "pretest": "npm run build"
+    "pretest": "npm run build",
+    "precheck": "npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0"
