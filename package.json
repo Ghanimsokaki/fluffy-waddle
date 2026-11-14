@@ -1,14 +1,23 @@
 {
-  "name": "fluffy-waddle",
+  "name": "gemby-ais",
   "version": "1.0.0",
   "private": true,
-  "description": "AI chat with optional web search and Box MCP",
+  "description": "Gemby AIs chat with Supabase accounts and MCP",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "start": "node server.js",
     "test": "node --test test/*.test.js",
-    "build": "node build.js"
+    "build": "node build.js",
+    "prestart": "npm run build",
+    "pretest": "npm run build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "happy-dom": "^21.0.4"
   }
 }

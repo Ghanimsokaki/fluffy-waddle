@@ -1,88 +1,77 @@
-# Fluffy Waddle
+# Gemby AIs
 
-A dependency-free AI chat app for OpenRouter and NVIDIA NIM, with optional OpenRouter web search and Simular's hosted box MCP server.
+An AI chat app with Supabase accounts, one user-supplied AI key, optional OpenRouter web search, instruction skills, and approval-gated MCP tools. The original chat layout, animations and responsive theme are retained.
 
-## Run and test
+## Supabase setup (required for accounts)
 
-Use Node.js 20 or newer:
+1. Create a Supabase project. In its SQL Editor run [`supabase/schema.sql`](supabase/schema.sql). This creates `gemby_profiles` with row-level security; each authenticated user can access only their own row. The app also serves this non-secret SQL at `/schema.sql` and links to it from the sign-in setup help.
+2. Enable **Email** authentication in Supabase. Configure the Site URL and allowed Redirect URLs for your deployed site and, if testing locally, `http://localhost:8080/`. Email confirmation and password reset depend on your Supabase email settings and redirect configuration.
+3. In Vercel → Project → Settings → Environment Variables add:
+
+   | Name | Value |
+   | --- | --- |
+   | `SUPABASE_URL` | Your Supabase project URL |
+   | `SUPABASE_ANON_KEY` | Your Supabase **publishable/anon** API key |
+
+   These two values are public browser configuration. **Never use the service-role or secret key** as the anon key. Set them for the relevant Production, Preview and Development environments and redeploy after changes. This app does not use or need a Supabase service-role key.
+4. Open Gemby AIs, select **Account**, create an account, and confirm the email if your project requires it. Sign in and add your AI key in Settings. The app needs Supabase configuration and the SQL schema before login and sync can work.
+
+Chats, selected provider/model, skills and non-secret chat preferences are stored in Supabase under the signed-in account. AI keys, Simular keys, and custom connector configurations/headers are **not** synced; they stay unencrypted in browser localStorage, namespaced by account. Supabase session tokens also live in the browser. Anyone with access to the browser profile or running scripts on the site may access local secrets. Use HTTPS, a trusted device and browser, and clear site data on shared devices. Don't put secrets in chats or skills, since those can be synced and sent to your AI provider. Old `fw.*` browser data is left untouched and is not automatically imported. After signing in, use **Account → Import old browser chats** to upload previous chats into that account; old keys and connectors are never imported.
+
+Sync currently saves the account's chat collection as one row; simultaneous edits from different devices are last-write-wins. Use **Retry sync** if a save fails, and check the sync status before leaving or changing devices.
+
+## Run locally
+
+Node.js 20 or newer is required. Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` in your shell (never commit secrets), then:
 
 ```bash
-node server.js                 # http://localhost:8080, or set PORT
-node --test test/*.test.js
+npm ci
+npm start                 # builds browser auth client and listens on http://localhost:8080
+npm test
 ```
 
-Open **Settings** to add an OpenRouter or NVIDIA API key, or configure server environment variables as described below. Browser settings, tokens and chats are saved **unencrypted in localStorage** and are accessible to anyone with access to that browser profile. Use HTTPS on any non-local deployment. Clear browser storage when using a shared device.
+On Vercel, import the repository using the **Other** framework preset. The build command and output directory are in `vercel.json`. Functions proxy NVIDIA, Simular, and CodeCraft requests to fixed upstream hosts. The chat/tool proxies require a user-supplied bearer token but do not authenticate users themselves. Protect or rate-limit your deployment as appropriate; they are not multi-tenant gateways.
 
-## Web search
+## One AI key
 
-In Settings, check **Enable OpenRouter web search**. This sends OpenRouter's `openrouter:web_search` tool with chat requests; the model decides whether to use it. Search can incur charges **even when the model is free**. Source links from returned citations are shown where available. Search requires OpenRouter and may depend on model/provider tool support; it is not supported for NVIDIA. Switch off the setting to use NVIDIA.
+Choose OpenRouter or NVIDIA in the chat header, then add the corresponding API key in **Settings**. Only one browser AI-provider key is stored at a time; switching provider clears it. OpenRouter calls go directly to OpenRouter; NVIDIA calls use the included fixed-destination proxy. Neither silently falls back to a server key. CodeCraft is a separate, explicitly selected provider that uses the Vercel key described below. AI keys are not sent to MCP servers. A separate connector may require its own credentials—an AI-provider key does not authenticate third-party services.
 
-## Other MCP servers
+OpenRouter web search is optional in Settings and may incur charges even for free models. It requires an OpenRouter model/provider that supports the search tool. This OpenRouter search option is not supported with NVIDIA or CodeCraft.
 
-Open **Settings → Other MCP servers**. To add a link, enter a name, an HTTPS MCP URL, and an optional bearer token; click **Add link to JSON**, then **Test enabled servers** and **Save**. Alternatively paste JSON such as:
+## CodeCraft on Vercel
+
+CodeCraft is an OpenAI-compatible provider; Gemby AIs uses its fixed `https://codecraftapi.com/v1` endpoint. Set up Supabase first. Then in **Vercel → Project → Settings → Environment Variables** add:
+
+| Name | Value |
+| --- | --- |
+| `CODECRAFT_API_KEY` | Your CodeCraft API key (`cc_…`) |
+| `CODECRAFT_ALLOWED_EMAILS` | A comma-separated list of Supabase account emails allowed to spend that key, e.g. `you@example.com` |
+
+Also configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` as described above. Select the desired Production/Preview/Development environments and redeploy. Create/sign in to a Supabase account with a **confirmed email** from the allowlist, select **CodeCraft** in the chat header, and choose a model from the live list. The app does not invent model IDs; select a Sonnet model only if CodeCraft actually lists it. The key needs CodeCraft's inference and `models:read` scopes. Model availability, costs, and quotas are determined by CodeCraft.
+
+The server checks each request's session with Supabase and rejects unconfirmed or non-allowlisted accounts before it uses the server key. The session is not forwarded to CodeCraft; the CodeCraft key is not returned to the browser or sent to MCP servers. **This is not a spending limit or rate limiter:** every approved account can spend the shared key's quota. Limit the allowlist, configure provider budgets and rate limits, and protect your deployment before production. An empty allowlist disables CodeCraft access. This feature has automated mocked tests but has not been verified against a live Supabase or CodeCraft account.
+
+## MCP connectors and skills
+
+**box by Simular:** Create a personal key at [box.simular.ai/access](https://box.simular.ai/access), enter it under **Settings → box by Simular MCP**, test the connection, and enable its tools. The server forwards requests only to `https://mcp.box.simular.ai/mcp`; interactive OAuth is not supported.
+
+**Other MCP servers:** In Settings, add an HTTPS Streamable HTTP link or paste configuration JSON:
 
 ```json
 {
   "mcpServers": {
-    "example": {
-      "url": "https://example.com/mcp",
-      "headers": { "Authorization": "Bearer YOUR_TOKEN" }
-    },
-    "second-server": {
-      "url": "https://example.org/mcp",
-      "disabled": true
-    }
+    "example": { "url": "https://example.com/mcp" },
+    "disabled-example": { "url": "https://example.org/mcp", "disabled": true }
   }
 }
 ```
 
-This accepts remote **Streamable HTTP** MCP servers (optionally `"type": "http"`). Set `disabled` to `true` to skip a server. Headers are optional; use an actual value, not an environment-variable placeholder. The JSON editor displays credentials and saves them unencrypted in browser localStorage, so don't use shared browsers or paste secrets into chat. The token goes to the specified MCP server, not to the model; tool descriptions and approved results are sent to the model provider. Connect only trusted servers and review every tool call before approving it.
+Optional `headers` can contain a bearer token. These configurations are stored locally and are visible in the JSON editor. Remote MCP URLs are contacted directly from the browser and require the server to allow CORS, including required MCP headers. Local/stdio commands, OAuth login, legacy SSE-only endpoints, environment-variable expansion, MCP resources/prompts and server-initiated requests are not supported. Image/audio tool results are omitted. A tool-calling model is required.
 
-Other MCP URLs are contacted **directly from the browser**, not through a general-purpose server proxy. They must support HTTPS, Streamable HTTP, and CORS for the app's origin, including POST/OPTIONS and the required request and response headers (such as `Mcp-Session-Id`). Servers that do not allow browser CORS will not work directly. Local/stdio `command` configurations, OAuth sign-in flows, environment expansion, legacy SSE-only transport, MCP resources/prompts, and server-initiated requests are not supported. The built-in Simular connection uses its own fixed-destination proxy and remains available separately. Up to 10 remote servers and 200 total tools can be enabled; a tool-calling model is required.
+When enabled in Settings, the AI can propose a connector name and HTTPS URL, but it cannot provide credentials. You must approve the proposal; it is saved **disabled** until you enable it in Settings. Every MCP tool action also requires approval. Review URLs, names, and arguments carefully: tools may run commands, access data, or change files. Approved tool results and server-provided tool descriptions are sent to the selected AI provider. Never trust instructions in untrusted pages or tool results automatically.
 
-## Skills
+In **Settings → Skills**, enable built-in skills or edit their JSON. Skills are reusable instructions sent to the model, not executable skill packages or automatic `SKILL.md` loaders.
 
-In **Settings → Skills**, check a built-in skill to enable it. Edit **Skills JSON** to change instructions or add your own:
+## Verification and limitations
 
-```json
-[
-  { "name": "Writing", "enabled": true, "instructions": "Write clearly and concisely." }
-]
-```
-
-Enabled skills are reusable instructions included in each model request. They are not executable Agent Skills packages: the app does not install packages, run scripts, or load `SKILL.md` files and their supporting files automatically. Only add instructions you trust, and don't put secrets in them. These settings are stored locally in the browser.
-
-## box by Simular MCP
-
-1. Sign in at [box by Simular](https://box.simular.ai/), then create a personal key at [box.simular.ai/access](https://box.simular.ai/access). The key normally begins with `cb_`.
-2. Enter the personal key in **Settings → box by Simular MCP**, click **Test Simular box connection**, and enable box tools. The app accepts personal keys; it does **not** support Simular's interactive OAuth login. On a protected deployment, you can instead use the server variable below.
-3. Choose a tool-calling model and ask it to use the cloud computer. The app discovers MCP tools, passes their definitions to the model, and asks for confirmation on **every** proposed tool call. Inspect the tool and arguments carefully: tools can browse, run commands, and modify or delete files. Declining prevents execution. Tool results are sent to your AI provider. Image output is not displayed as a visual screenshot in this app.
-
-The server forwards MCP requests only to `https://mcp.box.simular.ai/mcp`; it is not an arbitrary URL proxy. It supports Streamable HTTP request/response MCP tools with JSON or SSE responses, including session IDs. It does not support stdio/local MCP servers, interactive OAuth, or server-initiated MCP requests. Tool calling requires a compatible model/provider. Never approve an action solely because a page or model asks you to; external content can contain misleading instructions. See [Simular's MCP documentation](https://box.simular.ai/docs/mcp).
-
-## Vercel deployment
-
-Import this repository into Vercel. Leave the framework preset as **Other**; the included configuration builds `public/index.html` and creates Node functions for `/api/config`, NVIDIA, OpenRouter and Box. Choose Node.js 20 or later in the project settings. Add only the environment variables you need in **Project → Settings → Environment Variables**, select the relevant Production/Preview/Development environments, and redeploy after changing them:
-
-| Exact name | Value | Required? |
-| --- | --- | --- |
-| `OPENROUTER_API_KEY` | Your OpenRouter API key, from [OpenRouter keys](https://openrouter.ai/keys) | For OpenRouter server-side chat and web search, unless users enter their own browser key |
-| `NVIDIA_API_KEY` | Your NVIDIA NIM API key, from [NVIDIA build](https://build.nvidia.com/) | For NVIDIA server-side chat, unless users enter their own browser key |
-| `BOX_ACCESS_TOKEN` | A Simular box personal key from [box.simular.ai/access](https://box.simular.ai/access) | Optional; for a protected deployment only, or users can enter their own token in Settings |
-
-In each Vercel entry, the **Key/Name** is exactly the text in the first column; the **Value** is your actual secret, without quotes or `Bearer `. Do not commit secrets or share them in chat. The settings dialog detects whether each variable is present but does **not** validate that it works. Browser-provided credentials take precedence over server credentials. A custom NVIDIA proxy URL requires a browser NVIDIA key; server fallback only applies to the built-in `/api/nvidia` route. Web search needs no separate search key, but OpenRouter may charge for it. This app does not perform OAuth login or token refresh.
-
-**Security:** This app has no login, authorization, or rate limiting. A secret configured on a server is usable by anyone who can reach its API, even though the secret value itself is not displayed. The Box confirmation is only in the browser UI and can be bypassed by calling the API directly. A shared `BOX_ACCESS_TOKEN` would let visitors control the Simular cloud computer, potentially including running commands and modifying or deleting files. Do not set server secrets on a publicly accessible deployment without protecting **all** routes, including `/api/*`, with appropriate authentication and abuse controls. Prefer individual browser credentials on a public deployment. Vercel function duration and payload limits can also interrupt long AI responses.
-
-## Other deployment options
-
-Run `node server.js` on a Node host with outbound HTTPS access to `integrate.api.nvidia.com` and `mcp.box.simular.ai`. It listens on `0.0.0.0` and uses the `PORT` environment variable. The same optional environment variables above work locally. Terminate TLS at your hosting provider or reverse proxy. Configure request-size limits, rate limiting, monitoring, and access controls at that layer before exposing it publicly; the included server is an unauthenticated application proxy, not a multi-tenant gateway. It serves only the public HTML page, not repository files.
-
-Static hosting (such as GitHub Pages) can use OpenRouter directly. NVIDIA requires the optional `proxy/worker.js` Cloudflare Worker; set **Proxy base URL** to `https://<your-worker>.workers.dev/v1`. That Worker only proxies NVIDIA and does **not** provide Box MCP. For Box, host the included Node server on the same origin as the page. The Worker permits cross-origin requests and is not rate-limited; configure appropriate protections before public use.
-
-## Features
-
-- Live OpenRouter free-model list and NVIDIA model picker
-- Streaming replies, stop, retry, reasoning view, and copyable code blocks
-- Saved chats, light/dark theme, responsive layout, and reduced-motion support
-- Optional web search, approval-gated MCP tools, and reusable instruction skills
+Run `npm test` and `npm run build`. The automated tests mock provider and Supabase calls; they do not prove your Supabase project, email delivery, RLS policies, model provider, MCP server, or Vercel deployment is correctly configured. Test sign-up, password reset, account isolation, sync, and connector access with your own configured project before production. Supabase Auth and email provider limits, Vercel function limits, and AI provider charges apply.
