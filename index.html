@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fluffy Waddle · Free AI Chat</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧇</text></svg>">
-<meta name="description" content="Chat with free OpenRouter models and NVIDIA NIM models in one clean interface.">
+<title>Gemby AIs · Free AI Chat</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta name="description" content="Chat with OpenRouter, NVIDIA NIM and CodeCraft models in one clean interface.">
 <style>
 :root{
   --bg:#f7f7fb; --panel:#ffffff; --side:#f0f0f7; --text:#1b1b29; --muted:#6b6b80;
@@ -37,6 +37,7 @@ a{color:var(--accent)}
 nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;gap:14px;padding:calc(14px + env(safe-area-inset-top)) 22px 14px;transition:.3s}
 nav.stuck{background:color-mix(in srgb,var(--panel) 82%,transparent);backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--border);padding-top:calc(9px + env(safe-area-inset-top));padding-bottom:9px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;text-decoration:none;color:var(--text)}
+.logo img,.av img{display:block;width:100%;height:100%;border-radius:inherit}
 .logo{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:18px;flex:none}
 nav .sp{flex:1}
 nav a.l{color:var(--muted);text-decoration:none;font-weight:500}
@@ -99,7 +100,7 @@ aside .brand{padding:4px 6px}
 .chat.active{background:var(--panel);box-shadow:inset 3px 0 0 var(--accent)}
 .chat .del{opacity:0;color:var(--muted);padding:0 4px;font-style:normal}
 .chat:hover .del{opacity:1}
-.foot{display:flex;gap:8px}.foot .ghost{flex:1}
+.foot{display:flex;gap:8px}.foot .ghost{flex:1}.sync-status{padding:0 6px;color:var(--muted);font-size:11px}
 main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
 header.top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-bottom:1px solid var(--border);background:var(--panel);flex-wrap:wrap}
 #menu{display:none;border:0;background:none;font-size:22px}
@@ -231,7 +232,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 <body>
 <div id="prog"></div>
 <nav id="nav">
-  <a class="brand" href="#top"><div class="logo">🧇</div>Fluffy Waddle</a>
+  <a class="brand" href="#top"><div class="logo"><img src="/icon.svg" alt=""></div>Gemby AIs</a>
   <span class="sp"></span>
   <a class="l" href="#providers">Models</a>
   <a class="l" href="#features">Features</a>
@@ -244,11 +245,11 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
     <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
     <div class="inner">
       <span class="badge reveal"><i></i>Free models, one clean chat</span>
-      <h1 class="reveal" style="--d:.1s">Talk to <span class="grad">free AI models</span> from OpenRouter and NVIDIA NIM</h1>
+      <h1 class="reveal" style="--d:.1s">Talk to <span class="grad">AI models</span> from OpenRouter, NVIDIA and CodeCraft</h1>
       <p class="reveal" style="--d:.2s">Pick a provider, pick a model, start chatting. Streaming replies, saved history and a layout that feels great on any screen.</p>
       <div class="reveal" style="--d:.3s"><a class="cta big" href="#chat">Start chatting →</a></div>
       <div class="preview reveal" style="--d:.45s">
-        <div class="bar"><i></i><i></i><i></i><em>Fluffy Waddle</em></div>
+        <div class="bar"><i></i><i></i><i></i><em>Gemby AIs</em></div>
         <div class="body"><div class="u" id="demoU"></div><div class="a" id="demoA"></div></div>
       </div>
     </div>
@@ -257,11 +258,12 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 
   <section id="providers">
     <div class="inner">
-      <h2 class="t reveal">Two providers, one place</h2>
+      <h2 class="t reveal">Your models, one place</h2>
       <p class="sub reveal" style="--d:.08s">Switch between them in a click while you chat.</p>
       <div class="grid">
         <div class="card reveal left"><div class="ic">🛣️</div><h3>OpenRouter</h3><p>The free-tier model list loads live, so you always see what is currently available. Works directly from the browser.</p></div>
         <div class="card reveal right" style="--d:.1s"><div class="ic">🟩</div><h3>NVIDIA NIM</h3><p>Nemotron, Llama, Mistral and more from build.nvidia.com. Uses the small included proxy because NVIDIA blocks direct browser calls.</p></div>
+        <div class="card reveal" style="--d:.2s"><div class="ic">✦</div><h3>CodeCraft</h3><p>Explore available models through a server-configured key. Access is limited to approved accounts.</p></div>
       </div>
     </div>
   </section>
@@ -274,7 +276,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
     <div class="inner stats">
       <div class="reveal"><b class="grad" data-count="free">0</b><span>free OpenRouter models right now</span></div>
       <div class="reveal" style="--d:.12s"><b class="grad" data-count="nv">0</b><span>NVIDIA NIM chat models</span></div>
-      <div class="reveal" style="--d:.24s"><b class="grad" data-count="0">0</b><span>build steps needed</span></div>
+      <div class="reveal" style="--d:.24s"><b class="grad" data-count="1">0</b><span>AI key at a time</span></div>
     </div>
   </section>
 
@@ -287,7 +289,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
         <div class="card reveal" style="--d:.08s"><div class="ic">🧠</div><h3>Reasoning view</h3><p>Thinking models show their reasoning in a collapsible block instead of an empty reply.</p></div>
         <div class="card reveal" style="--d:.16s"><div class="ic">🩹</div><h3>Clear errors</h3><p>Bad key, rate limit or blocked request? You get a plain explanation and a retry button.</p></div>
         <div class="card reveal" style="--d:.24s"><div class="ic">🌗</div><h3>Light and dark</h3><p>Follows your system, with a manual switch.</p></div>
-        <div class="card reveal" style="--d:.32s"><div class="ic">💾</div><h3>Saved chats</h3><p>History and browser-entered keys are saved on your device.</p></div>
+        <div class="card reveal" style="--d:.32s"><div class="ic">💾</div><h3>Saved chats</h3><p>Chats and preferences sync to your account. Keys stay on this device.</p></div>
         <div class="card reveal" style="--d:.4s"><div class="ic">📱</div><h3>Mobile ready</h3><p>Slide-out sidebar and safe-area aware layout.</p></div>
       </div>
     </div>
@@ -296,11 +298,11 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
   <section id="how">
     <div class="inner">
       <h2 class="t reveal">Set up in a minute</h2>
-      <p class="sub reveal" style="--d:.08s">You only need an API key for the provider you use.</p>
+      <p class="sub reveal" style="--d:.08s">Use one API key for the AI provider you choose.</p>
       <div class="steps">
-        <div class="step reveal left">Get a free key at openrouter.ai/keys and, for NIM, at build.nvidia.com.</div>
-        <div class="step reveal right" style="--d:.1s">Run <code>node server.js</code> in the project folder and open http://localhost:8080.</div>
-        <div class="step reveal left" style="--d:.2s">Open Settings, paste your keys, choose a model and chat.</div>
+        <div class="step reveal left">Get an API key for OpenRouter or NVIDIA NIM.</div>
+        <div class="step reveal right" style="--d:.1s">Create your account and sign in.</div>
+        <div class="step reveal left" style="--d:.2s">Open Settings, paste your one AI key, choose a model and chat.</div>
       </div>
     </div>
   </section>
@@ -311,18 +313,21 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
       <div class="reveal" style="--d:.1s;margin-top:22px"><a class="cta big" href="#chat">Open the chat</a></div>
     </div>
   </section>
-  <footer class="f">Fluffy Waddle · your chat, your choice</footer>
+  <footer class="f">Gemby AIs · your chat, your choice</footer>
 </div>
 
 <div id="app">
   <aside id="side">
-    <div class="brand"><div class="logo">🧇</div>Fluffy Waddle</div>
+    <div class="brand"><div class="logo"><img src="/icon.svg" alt=""></div>Gemby AIs</div>
     <button class="new" id="new">＋ New chat</button>
     <div id="chats"></div>
+    <span class="sync-status" id="sync-status" role="status">Sign in to sync</span>
+    <button class="ghost" id="sync-retry" type="button" hidden>Retry sync</button>
     <div class="foot">
       <button class="ghost" id="home">← Home</button>
       <button class="ghost" id="theme" title="Toggle theme">◐</button>
-      <button class="ghost" id="settings">⚙</button>
+      <button class="ghost" id="account" title="Account">Account</button>
+      <button class="ghost" id="settings" title="Settings">⚙</button>
     </div>
   </aside>
   <main>
@@ -332,6 +337,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
       <div class="seg" id="prov">
         <button data-p="openrouter">OpenRouter</button>
         <button data-p="nvidia">NVIDIA NIM</button>
+        <button data-p="codecraft">CodeCraft</button>
       </div>
       <div class="mp">
         <button class="ghost" id="mbtn" aria-haspopup="listbox"><span id="mname">Model</span> ▾</button>
@@ -345,7 +351,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
     <button id="down" aria-label="Scroll to latest">↓</button>
     <form id="form">
       <div class="box">
-        <textarea id="input" rows="1" placeholder="Message Fluffy Waddle…"></textarea>
+        <textarea id="input" rows="1" placeholder="Message Gemby AIs…"></textarea>
         <button id="send" type="submit" aria-label="Send">↑</button>
       </div>
       <div class="hint"><kbd>Enter</kbd> send · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Ctrl</kbd>+<kbd>K</kbd> models · <kbd>/</kbd> focus</div>
@@ -356,29 +362,27 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 <div id="toast"></div>
 <dialog id="dlg">
   <h3>Settings</h3>
-  <p>Browser keys are stored on this device. Server key status below shows presence only, not validity.</p>
-  <p id="server-key-status" role="status">Checking server key configuration…</p>
-  <p>Server credentials are usable by anyone who can access the API. Protect your deployment before adding shared keys or a Box token.</p>
-  <h4>OpenRouter</h4>
-  <label>API key</label><input id="k-or" type="password" placeholder="sk-or-v1-…">
-  <h4>NVIDIA NIM</h4>
-  <label>API key</label><input id="k-nv" type="password" placeholder="nvapi-…">
-  <label>Proxy base URL</label><input id="u-nv" placeholder="/api/nvidia">
-  <p>NVIDIA blocks direct browser requests (no CORS). The default <code>/api/nvidia</code> works when you run <code>node server.js</code>. Using a Cloudflare Worker? Paste its URL ending in <code>/v1</code>.</p>
+  <p>OpenRouter and NVIDIA use one browser-supplied AI key at a time. CodeCraft uses the server key for approved accounts. Connector credentials stay in this browser, unencrypted.</p>
+  <h4>AI provider key</h4>
+  <label for="ai-key">API key for <span id="key-provider">OpenRouter</span></label><input id="ai-key" type="password" autocomplete="off" placeholder="Paste your provider API key">
+  <p id="key-hint">Switching AI providers clears this key. Connectors may require their own separate credentials.</p>
+  <p id="codecraft-status" role="status" hidden></p>
   <h4>Web search</h4>
   <label><input id="web-search" type="checkbox" style="width:auto"> Enable OpenRouter web search</label>
-  <p>OpenRouter may charge for searches, even with free models. The model decides when to search. Not available with NVIDIA.</p>
+  <p>OpenRouter may charge for searches, even with free models. The model decides when to search. This search option is not available with NVIDIA or CodeCraft.</p>
   <h4>box by Simular MCP</h4>
   <label for="box-token">Simular box personal key</label><input id="box-token" type="password" autocomplete="off" placeholder="cb_…">
-  <p>Connects to Simular's cloud computer via the app server. Get a personal key at <a href="https://box.simular.ai/access" target="_blank" rel="noopener noreferrer">box.simular.ai/access</a>. Leave blank to use a configured server token. Tool results are sent to the AI provider. Every tool call requires approval.</p>
+  <p>Connects to Simular's cloud computer via the app server. Get a personal key at <a href="https://box.simular.ai/access" target="_blank" rel="noopener noreferrer">box.simular.ai/access</a>. Tool results are sent to the AI provider. Every tool call requires approval.</p>
   <button class="ghost" id="box-test" type="button">Test Simular box connection</button> <span id="box-status" role="status"></span>
   <label><input id="box-enabled" type="checkbox" style="width:auto"> Allow Simular box tools in chat</label>
   <h4>Other MCP servers</h4>
+  <label><input id="allow-proposals" type="checkbox" style="width:auto"> Allow AI to propose connectors (approval required)</label>
   <p>Add an HTTPS Streamable HTTP MCP link or paste an <code>mcpServers</code> JSON configuration. Remote servers must allow browser CORS. Local commands, OAuth login and legacy SSE endpoints are not supported.</p>
   <label for="mcp-name">Server name</label><input id="mcp-name" placeholder="my-server" autocomplete="off">
   <label for="mcp-url">Server link</label><input id="mcp-url" placeholder="https://example.com/mcp" autocomplete="off">
   <label for="mcp-token">Bearer token (optional)</label><input id="mcp-token" type="password" autocomplete="off">
   <div class="settings-actions"><button class="ghost" id="mcp-add" type="button">Add link to JSON</button></div>
+  <div id="mcp-toggles" aria-label="Enable MCP servers"></div>
   <label for="mcp-json">MCP configuration JSON</label><textarea class="settings-editor" id="mcp-json" spellcheck="false"></textarea>
   <div class="settings-actions"><button class="ghost" id="mcp-test" type="button">Test enabled servers</button><span id="mcp-status" role="status"></span></div>
   <p>Tokens are visible in the JSON editor and stored unencrypted in this browser. Connect only trusted servers; tool definitions and results go to your AI provider, and each tool call requires approval.</p>
@@ -393,16 +397,32 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
   </div>
 </dialog>
 
+<dialog id="auth-dlg">
+  <h3>Welcome to Gemby AIs</h3>
+  <p id="auth-message" role="status">Sign in to sync your chats and preferences.</p>
+  <details id="setup-help"><summary>First-time Supabase setup</summary>
+    <p>1. Create a Supabase project and open its SQL Editor. Run the <a href="/schema.sql" target="_blank" rel="noopener noreferrer">database setup SQL</a>.</p>
+    <p>2. Enable email authentication and add your website URL to Supabase's allowed redirects.</p>
+    <p>3. In Vercel → Project → Settings → Environment Variables, add <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> (the publishable/anon key). Redeploy.</p>
+    <p>Never use the service-role or secret key here, and never share credentials in chat.</p>
+  </details>
+  <label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="email">
+  <label for="auth-password">Password</label><input id="auth-password" type="password" autocomplete="current-password">
+  <div class="settings-actions"><button class="primary" id="auth-login" type="button">Sign in</button><button class="ghost" id="auth-signup" type="button">Create account</button></div>
+  <div class="settings-actions"><button class="ghost" id="auth-reset" type="button">Reset password</button><button class="ghost" id="auth-retry" type="button" hidden>Retry loading account</button><button class="ghost" id="auth-update" type="button" hidden>Set new password</button><button class="ghost" id="auth-import" type="button" hidden>Import old browser chats</button><button class="ghost" id="auth-logout" type="button" hidden>Sign out</button><button class="ghost" id="auth-close" type="button">Close</button></div>
+</dialog>
+<script src="/auth.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const store={
   get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},
-  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}}
 };
 const OR_URL='https://openrouter.ai/api/v1';
 const FALLBACK={
   openrouter:['google/gemma-4-26b-a4b-it:free','nvidia/nemotron-3-ultra-550b-a55b:free','nvidia/nemotron-3.5-lightning:free'],
-  nvidia:['nvidia/llama-3.1-nemotron-70b-instruct','nvidia/nemotron-3-super-120b-a12b','deepseek-ai/deepseek-v4.1-flash','mistralai/mistral-large-2-instruct']
+  nvidia:['nvidia/llama-3.1-nemotron-70b-instruct','nvidia/nemotron-3-super-120b-a12b','deepseek-ai/deepseek-v4.1-flash','mistralai/mistral-large-2-instruct'],
+  codecraft:[]
 };
 const NOT_CHAT=/embed|guard|safety|reward|parse|retriev|rerank|deplot|fuyu|vlm|topic-control|nemoguard|clip|paligemma/i;
 
@@ -411,20 +431,69 @@ const DEFAULT_SKILLS=[
   {name:'Research',enabled:false,instructions:'Distinguish verified facts from uncertainty and cite available sources.'},
   {name:'Writing',enabled:false,instructions:'Write clearly for the requested audience and keep the response well structured.'}
 ];
-let chats=store.get('fw.chats',[]), cur=store.get('fw.cur',null);
-let cfg=Object.assign({provider:'openrouter',model:{},orKey:'',nvKey:'',nvUrl:'/api/nvidia',webSearch:false,boxEnabled:false,boxToken:'',mcpConfig:{mcpServers:{}},skills:DEFAULT_SKILLS},store.get('fw.cfg2',{}));
-let models={openrouter:FALLBACK.openrouter.slice(),nvidia:FALLBACK.nvidia.slice()};
-let busy=false, ctrl=null;
-let serverKeys={openrouter:false,nvidia:false,box:false};
-const serverConfigPromise=fetch('/api/config',{cache:'no-store'}).then(async r=>{
-  if(!r.ok)throw new Error('Server configuration unavailable');
-  const data=await r.json();serverKeys={openrouter:data.openrouter===true,nvidia:data.nvidia===true,box:data.box===true};
-  $('server-key-status').textContent='Server variables: OPENROUTER_API_KEY '+(serverKeys.openrouter?'configured':'not configured')+' · NVIDIA_API_KEY '+(serverKeys.nvidia?'configured':'not configured')+' · BOX_ACCESS_TOKEN '+(serverKeys.box?'configured':'not configured')+'. Presence only; not verified.';
-}).catch(()=>{$('server-key-status').textContent='Server key detection unavailable; use browser keys or run the app server.'});
-const uid=()=>Math.random().toString(36).slice(2,9);
+const DEFAULT_CFG=()=>({provider:'openrouter',model:{},aiKey:'',webSearch:false,allowProposals:true,boxEnabled:false,boxToken:'',mcpConfig:{mcpServers:{}},skills:structuredClone(DEFAULT_SKILLS)});
+let chats=[],cur=null,cfg=DEFAULT_CFG();
+let models={openrouter:FALLBACK.openrouter.slice(),nvidia:FALLBACK.nvidia.slice(),codecraft:[]};
+let codecraftConfigured=false,codecraftAccessConfigured=false,codecraftError='',codecraftCapabilities=Object.create(null);
+let busy=false,ctrl=null,accountClient=null,currentUser=null,accountReady=false,accountGeneration=0,saveQueue=Promise.resolve(),recoveryMode=false,syncFailed=false,accountConfigError='';
+const privateKey=id=>'gemby.private.'+id;
+const uid=()=>crypto.randomUUID();
 const active=()=>chats.find(c=>c.id===cur);
-const save=()=>{store.set('fw.chats',chats);store.set('fw.cur',cur)};
-const saveCfg=()=>store.set('fw.cfg2',cfg);
+function privateSettings(){return {provider:cfg.provider,aiKey:cfg.aiKey,boxToken:cfg.boxToken,mcpConfig:cfg.mcpConfig};}
+function cloudSettings(){return {provider:cfg.provider,model:cfg.model,webSearch:cfg.webSearch,allowProposals:cfg.allowProposals,boxEnabled:cfg.boxEnabled,skills:cfg.skills};}
+function persist(){
+  if(!currentUser||!accountReady)return;
+  const id=currentUser.id,generation=accountGeneration;
+  if(!store.set(privateKey(id),privateSettings()))toast('Browser could not save your local keys or connectors.');
+  $('sync-status').textContent='Syncing…';$('sync-retry').hidden=true;
+  const snapshot=JSON.parse(JSON.stringify({user_id:id,chats,settings:cloudSettings(),updated_at:new Date().toISOString()}));
+  saveQueue=saveQueue.then(async()=>{
+    if(!currentUser||currentUser.id!==id||generation!==accountGeneration)return;
+    const {error}=await accountClient.from('gemby_profiles').upsert(snapshot,{onConflict:'user_id'});
+    if(currentUser?.id===id&&generation===accountGeneration){syncFailed=!!error;$('sync-status').textContent=error?'Sync failed':'Synced';$('sync-retry').hidden=!error;if(error)toast('Sync failed: '+error.message);}
+  }).catch(()=>{if(currentUser?.id===id&&generation===accountGeneration){syncFailed=true;$('sync-status').textContent='Sync failed';$('sync-retry').hidden=false;toast('Could not sync account data.');}});
+}
+const save=()=>persist();
+const saveCfg=()=>persist();
+const serverConfigPromise=fetch('/api/config',{cache:'no-store'}).then(async r=>{
+  if(!r.ok)throw new Error('Cannot load account configuration.');
+  const c=await r.json();
+  codecraftConfigured=c.codecraftConfigured===true;codecraftAccessConfigured=c.codecraftAccessConfigured===true;
+  if(!c.supabaseUrl||!c.supabaseAnonKey)throw new Error('Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY and redeploy.');
+  if(!window.createGembyClient)throw new Error('Account client is unavailable. Run npm install and npm run build.');
+  accountClient=window.createGembyClient(c.supabaseUrl,c.supabaseAnonKey);
+  accountClient.auth.onAuthStateChange((event,session)=>{setTimeout(()=>applySession(session,event),0)});
+}).catch(e=>{accountConfigError=e.message;$('auth-message').textContent=e.message;$('setup-help').open=true});
+async function applySession(session,event){
+  if(event==='PASSWORD_RECOVERY'){recoveryMode=true;openAccount('Enter a new password below.');$('auth-update').hidden=false;}
+  const user=session?.user||null;
+  if(user&&currentUser?.id===user.id&&accountReady)return;
+  const generation=++accountGeneration;
+  ctrl?.abort();if($('dlg').open)$('dlg').close();for(const id of ['ai-key','box-token','mcp-token','mcp-json'])$(id).value='';currentUser=user;accountReady=false;models.codecraft=[];codecraftCapabilities=Object.create(null);codecraftError='';syncFailed=false;$('sync-retry').hidden=true;$('auth-retry').hidden=true;$('sync-status').textContent=user?'Loading account…':'Sign in to sync';chats=[];cur=null;cfg=DEFAULT_CFG();
+  $('account').textContent=user?'Account':'Sign in';renderAll();
+  if(!user){if(event==='SIGNED_OUT'){$('auth-email').value='';$('auth-password').value='';toast('Signed out.')}return;}
+  $('auth-message').textContent='Loading your account…';
+  let data,error;try{({data,error}=await accountClient.from('gemby_profiles').select('chats,settings').eq('user_id',user.id).maybeSingle())}catch(e){error=e}
+  if(generation!==accountGeneration)return;
+  if(error){$('auth-message').textContent='Could not load your account: '+error.message+'. Check the database setup.';$('auth-retry').hidden=false;openAccount();return;}
+  const settings=data?.settings&&typeof data.settings==='object'?data.settings:{};
+  const local=store.get(privateKey(user.id),{});
+  const provider=['openrouter','nvidia','codecraft'].includes(settings.provider)?settings.provider:'openrouter';
+  cfg=Object.assign(DEFAULT_CFG(),{provider,model:settings.model||{},webSearch:!!settings.webSearch,allowProposals:settings.allowProposals!==false,boxEnabled:!!settings.boxEnabled,skills:Array.isArray(settings.skills)?settings.skills:structuredClone(DEFAULT_SKILLS)}, {aiKey:local.provider===provider&&provider!=='codecraft'&&typeof local.aiKey==='string'?local.aiKey:'',boxToken:typeof local.boxToken==='string'?local.boxToken:'',mcpConfig:local.mcpConfig||{mcpServers:{}}});
+  chats=Array.isArray(data?.chats)?data.chats:[];cur=chats[0]?.id||null;accountReady=true;$('sync-status').textContent='Synced';renderAll();loadModels();
+  $('auth-message').textContent=recoveryMode?'Enter a new password below, then select Set new password.':'Signed in as '+(user.email||'your account')+'.';
+  $('auth-logout').hidden=false;
+  $('auth-import').hidden=!Array.isArray(store.get('fw.chats',null))||!!store.get('gemby.imported.'+user.id,false);
+  if($('auth-dlg').open&&!recoveryMode)$('auth-dlg').close();
+}
+function openAccount(message){
+  if(!accountClient&&accountConfigError)message=accountConfigError;
+  if(message)$('auth-message').textContent=message;
+  $('auth-logout').hidden=!currentUser;
+  $('auth-import').hidden=!currentUser||!accountReady||!Array.isArray(store.get('fw.chats',null))||!!store.get('gemby.imported.'+currentUser.id,false);
+  if(!$('auth-dlg').open)$('auth-dlg').showModal();
+}
+function requireAccount(){if(!currentUser||!accountReady){openAccount(currentUser?'Account data is still loading or unavailable.':'Sign in or create an account to chat.');return false}return true;}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- markdown (small) ---------- */
@@ -446,7 +515,7 @@ function md(t){
 function route(){
   const chat=location.hash==='#chat';
   document.body.classList.toggle('chat',chat);
-  if(chat){renderAll();setTimeout(()=>$('input').focus(),50)}else scrollTo(0,0);
+  if(chat){renderAll();setTimeout(()=>{if(!currentUser)openAccount();else $('input').focus()},50)}else scrollTo(0,0);
 }
 addEventListener('hashchange',route);
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);if(e.target.querySelector('[data-count]'))countUp(e.target)}}),{threshold:.18});
@@ -472,15 +541,36 @@ function countUp(wrap){
   });
 }
 
+async function codecraftSession(){
+  if(!accountClient||!currentUser)throw new UserError('Sign in to use CodeCraft.');
+  const id=currentUser.id,{data,error}=await accountClient.auth.getSession();
+  if(error||!data?.session?.access_token||data.session.user?.id!==id||currentUser?.id!==id)throw new UserError('Your account session expired.','Sign in again to use CodeCraft.');
+  return data.session.access_token;
+}
 /* ---------- models ---------- */
+async function loadCodecraftModels(){
+  if(cfg.provider==='codecraft'&&currentUser&&accountReady){
+    const id=currentUser.id,generation=accountGeneration;try{
+      if(!codecraftConfigured||!codecraftAccessConfigured)throw new UserError('CodeCraft needs its Vercel key and allowed emails configured.');
+      const token=await codecraftSession();if(currentUser?.id!==id||generation!==accountGeneration)return;const r=await fetch('/api/codecraft/models',{headers:{Authorization:'Bearer '+token}});
+      if(!r.ok)throw explain(r.status,await r.text(),'CodeCraft');
+      const j=await r.json();const items=Array.isArray(j.data)?j.data.filter(m=>m&&typeof m.id==='string'&&m.id.length>0&&(!m.type||m.type==='chat')):[];const ids=items.map(m=>m.id).sort();
+      if(!ids.length)throw new UserError('CodeCraft returned no models.');
+      if(currentUser?.id===id&&generation===accountGeneration){models.codecraft=ids;codecraftCapabilities=Object.create(null);for(const item of items)codecraftCapabilities[item.id]=item.capabilities;codecraftError='';}
+    }catch(e){if(currentUser?.id===id&&generation===accountGeneration){models.codecraft=[];codecraftCapabilities=Object.create(null);codecraftError=e.message||'Could not load CodeCraft models.';}}
+  }
+  renderModels();
+}
 async function loadModels(){
+  if(cfg.provider==='codecraft')void loadCodecraftModels();
   try{
     const r=await fetch(OR_URL+'/models');const j=await r.json();
     const free=j.data.filter(m=>String(m.pricing?.prompt)==='0'&&String(m.pricing?.completion)==='0'&&(m.architecture?.output_modalities||['text']).every(x=>x==='text')).map(m=>m.id).sort();
     if(free.length){models.openrouter=free;counts.free=free.length}
   }catch{counts.free=models.openrouter.length}
   try{
-    const r=await fetch(cfg.nvUrl.replace(/\/$/,'')+'/models');
+    if(cfg.provider!=='nvidia'||!cfg.aiKey)throw new Error('No NVIDIA key');
+    const r=await fetch('/api/nvidia/models',{headers:{Authorization:'Bearer '+cfg.aiKey}});
     if(r.ok){const j=await r.json();const ids=j.data.map(m=>m.id).filter(i=>!NOT_CHAT.test(i)).sort();if(ids.length)models.nvidia=ids}
   }catch{}
   counts.nv=models.nvidia.length;
@@ -491,12 +581,12 @@ const shortName=m=>String(m||'').split('/').pop().replace(':free','')+(String(m)
 function renderModels(){
   const p=cfg.provider,list=models[p];
   const sel=cfg.model[p]&&list.includes(cfg.model[p])?cfg.model[p]:list[0];
-  cfg.model[p]=sel;
-  $('mname').textContent=shortName(sel);
+  if(sel)cfg.model[p]=sel;
+  $('mname').textContent=sel?shortName(sel):'Choose model';
   document.querySelectorAll('#prov button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   const q=$('msearch').value.trim().toLowerCase();
   const items=list.filter(m=>m.toLowerCase().includes(q));
-  $('mlist').innerHTML=items.map(m=>`<button class="mi${m===sel?' on':''}" role="option" data-m="${esc(m)}"><b>${esc(shortName(m))}</b><small>${esc(m.includes('/')?m.split('/')[0]:'')}</small></button>`).join('')||'<p class="none">No models match</p>';
+  $('mlist').innerHTML=items.map(m=>`<button class="mi${m===sel?' on':''}" role="option" data-m="${esc(m)}"><b>${esc(shortName(m))}</b><small>${esc(m.includes('/')?m.split('/')[0]:'')}</small></button>`).join('')||'<p class="none">'+esc(p==='codecraft'&&codecraftError?codecraftError:'No models match')+'</p>';
   buildTrack();
 }
 function buildTrack(){
@@ -520,7 +610,7 @@ function renderList(){
 }
 function bubble(role,html){
   const d=document.createElement('div');d.className='msg '+role;
-  d.innerHTML=`<div class="av">${role==='bot'?'🧇':'🙂'}</div><div class="col"><div class="bubble">${html}</div></div>`;
+  d.innerHTML=`<div class="av">${role==='bot'?'<img src="/icon.svg" alt="">':'🙂'}</div><div class="col"><div class="bubble">${html}</div></div>`;
   $('wrap').appendChild(d);toBottom();return d.querySelector('.bubble');
 }
 function addActs(bub){
@@ -536,7 +626,7 @@ function renderChat(){
   const c=active();$('wrap').innerHTML='';
   $('title').textContent=c?c.title:'New chat';
   if(!c||!c.msgs.length){
-    $('wrap').innerHTML=`<div class="empty"><div class="logo">🧇</div><h2>What can I help with?</h2><p>Pick a provider and model above, then ask anything.</p>
+    $('wrap').innerHTML=`<div class="empty"><div class="logo"><img src="/icon.svg" alt=""></div><h2>What can I help with?</h2><p>Pick a provider and model above, then ask anything.</p>
     <div class="chips">${['Explain how neural networks learn','Write a Python function to merge two sorted lists','Give me 5 project ideas for a weekend'].map(x=>`<button data-chip="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
     return;
   }
@@ -547,14 +637,16 @@ function renderAll(){renderList();renderChat();renderModels()}
 
 /* ---------- API ---------- */
 function endpoint(){
-  if(cfg.provider==='openrouter')return{url:cfg.orKey?OR_URL+'/chat/completions':'/api/openrouter/chat/completions',key:cfg.orKey,hasKey:!!cfg.orKey||serverKeys.openrouter,name:'OpenRouter',
-    headers:{'HTTP-Referer':location.origin||'https://localhost','X-Title':'Fluffy Waddle'}};
-  return{url:cfg.nvUrl.replace(/\/$/,'')+'/chat/completions',key:cfg.nvKey,hasKey:!!cfg.nvKey||(cfg.nvUrl.replace(/\/$/,'')==='/api/nvidia'&&serverKeys.nvidia),name:'NVIDIA NIM',headers:{}};
+  if(cfg.provider==='codecraft')return{url:'/api/codecraft/chat/completions',key:'',hasKey:codecraftConfigured&&codecraftAccessConfigured,sessionAuth:true,name:'CodeCraft',headers:{}};
+  if(cfg.provider==='openrouter')return{url:OR_URL+'/chat/completions',key:cfg.aiKey,hasKey:!!cfg.aiKey,name:'OpenRouter',
+    headers:{'HTTP-Referer':location.origin||'https://localhost','X-Title':'Gemby AIs'}};
+  return{url:'/api/nvidia/chat/completions',key:cfg.aiKey,hasKey:!!cfg.aiKey,name:'NVIDIA NIM',headers:{}};
 }
 class UserError extends Error{constructor(m,hint){super(m);this.hint=hint}}
 function explain(status,body,name){
   let msg=body;try{const j=JSON.parse(body);msg=j.error?.message||j.detail||j.message||body}catch{}
   msg=String(msg).slice(0,300);
+  if(name==='CodeCraft'&&(status===401||status===403))return new UserError(`CodeCraft access denied. ${msg}`,'Sign in with a confirmed, allowed account.');
   if(status===401||status===403)return new UserError(`${name} rejected the API key.`,'Open Settings and check the key.');
   if(status===402)return new UserError(`${name} says this needs credits.`,'Choose a model ending in :free or add credits.');
   if(status===404)return new UserError(`Model or endpoint not found. ${msg}`,'Pick another model.');
@@ -616,7 +708,7 @@ async function connectMcp(server,signal){
     if(data.error)throw new UserError('MCP server '+server.name+': '+(data.error.message||'Request failed'));
     return data.result;
   }
-  const init=await request('initialize',{protocolVersion:version,capabilities:{},clientInfo:{name:'fluffy-waddle',version:'1.0.0'}});
+  const init=await request('initialize',{protocolVersion:version,capabilities:{},clientInfo:{name:'gemby-ais',version:'1.0.0'}});
   if(!init||typeof init.protocolVersion!=='string')throw new UserError('Invalid MCP initialization from '+server.name+'.');
   version=init.protocolVersion;
   await request('notifications/initialized',{},true);
@@ -626,13 +718,24 @@ async function connectMcp(server,signal){
 }
 async function connectBox(token,signal){
   await serverConfigPromise;
-  if(!token&&!serverKeys.box)throw new UserError('Add a Simular box personal key in Settings or configure BOX_ACCESS_TOKEN on the server.');
+  if(!token)throw new UserError('Add your Simular box personal key in Settings.');
   return connectMcp({name:'Simular box',url:'/api/box',headers:token?{Authorization:'Bearer '+token}:{}},signal);
 }
-async function stream(history,bub){
-  await serverConfigPromise;
+function proposeConnector(proposal){
+  if(!proposal||typeof proposal.name!=='string'||typeof proposal.url!=='string'||Object.keys(proposal).some(k=>!['name','url'].includes(k)))return 'Invalid proposal. Only a name and HTTPS URL are allowed.';
+  const name=proposal.name.trim();let url;
+  try{url=new URL(proposal.url)}catch{return 'Invalid connector URL.'}
+  if(!name||name.length>80||/[\x00-\x1f\x7f]/.test(name)||['__proto__','constructor','prototype'].includes(name)||url.protocol!=='https:'||url.username||url.password||url.search||url.hash||!url.hostname.includes('.')||/^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2[0-9]|3[01])\.|0\.|\[)/i.test(url.hostname))return 'Invalid or non-public connector. HTTPS URL must not contain credentials, query parameters, or a local address.';
+  let config;try{config=parseMcpConfig(JSON.stringify(cfg.mcpConfig||{mcpServers:{}}));if(Object.hasOwn(config.mcpServers,name))return 'A connector with that name already exists.';config.mcpServers[name]={url:url.href,disabled:true};parseMcpConfig(JSON.stringify(config));}catch(e){return 'Cannot add connector: '+e.message}
+  if(!confirm('Add this connector, initially disabled?\n\nName: '+name+'\nURL: '+url.href+'\n\nIt will not connect until you enable it in Settings. Do not approve unknown servers.'))return 'User denied the connector proposal.';
+  cfg.mcpConfig=config;saveCfg();return 'Connector saved disabled. The user must enable it in Settings before use.';
+}
+async function stream(history,bub,expectedGeneration){
+  const checkAccount=()=>{if(expectedGeneration!==undefined&&expectedGeneration!==accountGeneration)throw new DOMException('Account changed','AbortError')};
+  await serverConfigPromise;checkAccount();
   const ep=endpoint(),model=cfg.model[cfg.provider];
-  if(!ep.hasKey)throw new UserError(`No ${ep.name} API key yet.`,'Add a browser key in Settings or configure the server environment variable.');
+  if(!ep.hasKey)throw new UserError(`No ${ep.name} API key yet.`,ep.sessionAuth?'Configure CODECRAFT_API_KEY and CODECRAFT_ALLOWED_EMAILS in Vercel.':'Add your own API key in Settings.');
+  if(ep.sessionAuth&&(!model||!models.codecraft.includes(model)))throw new UserError('No CodeCraft model is available yet.','Check the model list, account access, and Vercel configuration.');
   if(!model)throw new UserError('No model selected.');
   if(cfg.webSearch&&cfg.provider!=='openrouter')throw new UserError('Web search is only available with OpenRouter.','Switch providers or turn off web search in Settings.');
   ctrl=new AbortController();
@@ -640,9 +743,9 @@ async function stream(history,bub){
   const skills=parseSkills(JSON.stringify(cfg.skills||[])).filter(s=>s.enabled);
   if(skills.length)messages.unshift({role:'system',content:'User-selected skills (instructions):\n\n'+skills.map(s=>s.name+':\n'+s.instructions).join('\n\n')});
   const servers=[];
-  if(cfg.boxEnabled){bub.textContent='Connecting to Simular box…';servers.push({name:'Simular box',connection:await connectBox(cfg.boxToken,ctrl.signal)});}
+  if(cfg.boxEnabled){bub.textContent='Connecting to Simular box…';servers.push({name:'Simular box',connection:await connectBox(cfg.boxToken,ctrl.signal)});checkAccount();}
   const mcp=parseMcpConfig(JSON.stringify(cfg.mcpConfig||{mcpServers:{}}));
-  for(const [name,server] of Object.entries(mcp.mcpServers))if(!server.disabled){bub.textContent='Connecting to '+name+'…';servers.push({name,connection:await connectMcp({...server,name},ctrl.signal)});}
+  for(const [name,server] of Object.entries(mcp.mcpServers))if(!server.disabled){bub.textContent='Connecting to '+name+'…';servers.push({name,connection:await connectMcp({...server,name},ctrl.signal)});checkAccount();}
   const registered=[];
   for(const server of servers)for(const tool of server.connection.tools){
     if(!tool||typeof tool.name!=='string'||!tool.name||tool.name.length>128||/[\x00-\x1f\x7f]/.test(tool.name))throw new UserError('MCP server '+server.name+' returned an invalid tool name.');
@@ -650,14 +753,17 @@ async function stream(history,bub){
     registered.push({alias,tool,server});if(registered.length>200)throw new UserError('Too many MCP tools across enabled servers. Disable some servers.');
   }
   const tools=registered.map(({alias,tool,server})=>({type:'function',function:{name:alias,description:'['+server.name+' / '+tool.name+'] '+(tool.description||''),parameters:tool.inputSchema||{type:'object',properties:{}}}}));
+  if(cfg.allowProposals!==false)tools.push({type:'function',function:{name:'gemby_propose_connector',description:'Propose a remote MCP connector for the user to approve. Only a name and HTTPS URL; no tokens, headers or credentials. New connectors remain disabled until the user enables them.',parameters:{type:'object',properties:{name:{type:'string',description:'A short name'},url:{type:'string',description:'Public HTTPS Streamable HTTP MCP endpoint without query parameters'}},required:['name','url'],additionalProperties:false}}});
   if(cfg.webSearch)tools.push({type:'openrouter:web_search'});
+  if(ep.sessionAuth&&tools.length&&Array.isArray(codecraftCapabilities[model])&&!codecraftCapabilities[model].includes('tools'))throw new UserError('This CodeCraft model does not support tool calling.','Pick another model or disable connector tools and proposals in Settings.');
   let reason='',text='',citations=[];
   for(let round=0;round<6;round++){
     let r;
     try{
       const body={model,stream:true,max_tokens:2048,messages};if(tools.length)body.tools=tools;
-      r=await fetch(ep.url,{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json',Accept:'text/event-stream',...(ep.key?{Authorization:'Bearer '+ep.key}:{}),...ep.headers},body:JSON.stringify(body)});
-    }catch(e){if(e.name==='AbortError')throw e;throw new UserError(`Could not reach ${ep.name}.`,'Check your connection and proxy settings.');}
+      const credential=ep.sessionAuth?await codecraftSession():ep.key;checkAccount();
+      r=await fetch(ep.url,{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json',Accept:'text/event-stream',...(credential?{Authorization:'Bearer '+credential}:{}),...ep.headers},body:JSON.stringify(body)});
+    }catch(e){if(e.name==='AbortError'||e instanceof UserError)throw e;throw new UserError(`Could not reach ${ep.name}.`,'Check your connection and proxy settings.');}
     if(!r.ok)throw explain(r.status,await r.text(),ep.name);
     const reader=r.body.getReader(),dec=new TextDecoder();let buf='',calls=[],lastPaint=0;
     text='';reason='';citations=[];
@@ -685,8 +791,12 @@ async function stream(history,bub){
     }
     messages.push({role:'assistant',content:text||null,tool_calls:calls});
     for(const call of calls){
+      checkAccount();
       const entry=registered.find(t=>t.alias===call.function.name);let result;
-      if(!entry)result='Tool is not available.';
+      if(call.function.name==='gemby_propose_connector'){
+        let proposal;try{proposal=JSON.parse(call.function.arguments||'{}')}catch{}
+        result=proposeConnector(proposal);
+      }else if(!entry)result='Tool is not available.';
       else{
         let args;try{args=JSON.parse(call.function.arguments||'{}')}catch{args=null}
         if(!args||typeof args!=='object'||Array.isArray(args))result='Invalid tool arguments.';
@@ -704,21 +814,23 @@ function showError(bub,e){
   bub.innerHTML=`<div class="errbox"><b>Something went wrong.</b> ${esc(e.message)}${e.hint?`<br><small>${esc(e.hint)}</small>`:''}<br><button class="ghost" data-retry>↻ Retry</button></div>`;
 }
 async function run(){
-  const c=active();if(!c||busy)return;
-  busy=true;setBusy(true);
+  const c=active();if(!c||busy||!requireAccount())return;
+  const generation=accountGeneration;busy=true;setBusy(true);
   const b=bubble('bot','<span class="dots"><i></i><i></i><i></i></span>');
   try{
-    const out=await stream(c.msgs,b);
+    const out=await stream(c.msgs,b,generation);
+    if(generation!==accountGeneration)throw new DOMException('Account changed','AbortError');
     c.msgs.push({role:'assistant',content:out.content,reasoning:out.reasoning||undefined});addActs(b);
   }catch(e){
-    if(e.name==='AbortError'){b.classList.remove('caret');if(!b.textContent.trim())b.parentElement.remove()}
+    if(generation!==accountGeneration){}
+    else if(e.name==='AbortError'){b.classList.remove('caret');if(!b.textContent.trim())b.parentElement.remove()}
     else showError(b,e instanceof UserError?e:new UserError('Unexpected error: '+(e.message||e)));
   }
   ctrl=null;busy=false;setBusy(false);save();renderList();
 }
 function setBusy(v){$('send').textContent=v?'■':'↑';$('send').setAttribute('aria-label',v?'Stop':'Send')}
 async function send(text){
-  if(busy||!text.trim())return;
+  if(busy||!text.trim()||!requireAccount())return;
   if(!active()){const c={id:uid(),title:'New chat',msgs:[]};chats.unshift(c);cur=c.id}
   const c=active();
   if(!c.msgs.length)c.title=text.trim().slice(0,40);
@@ -727,7 +839,7 @@ async function send(text){
 }
 
 /* ---------- wiring ---------- */
-$('form').onsubmit=e=>{e.preventDefault();if(busy){ctrl?.abort();return}const t=$('input').value;$('input').value='';fit();send(t)};
+$('form').onsubmit=e=>{e.preventDefault();if(busy){ctrl?.abort();return}if(!requireAccount())return;const t=$('input').value;$('input').value='';fit();send(t)};
 $('input').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('form').requestSubmit()}};
 const fit=()=>{const i=$('input');i.style.height='auto';i.style.height=Math.min(i.scrollHeight,180)+'px'};
 $('input').oninput=fit;
@@ -736,7 +848,7 @@ $('menu').onclick=()=>$('side').classList.toggle('open');
 $('home').onclick=()=>{location.hash='top'};
 $('down').onclick=toBottom;
 $('feed').addEventListener('scroll',()=>$('down').classList.toggle('show',!nearBottom()),{passive:true});
-$('prov').onclick=e=>{const b=e.target.closest('button');if(!b)return;cfg.provider=b.dataset.p;saveCfg();renderModels()};
+$('prov').onclick=e=>{const b=e.target.closest('button');if(!b||!requireAccount())return;if(cfg.provider!==b.dataset.p){if(cfg.aiKey&&!confirm('Switching provider clears your current AI key. Continue?'))return;cfg.provider=b.dataset.p;cfg.aiKey='';saveCfg();toast('Add a key for the selected provider.')}renderModels();if(cfg.provider==='codecraft')loadModels()};
 $('mbtn').onclick=e=>{e.stopPropagation();const h=$('mpop').hidden;$('mpop').hidden=!h;if(h){$('msearch').value='';renderModels();$('msearch').focus()}};
 $('msearch').oninput=renderModels;
 $('msearch').onkeydown=e=>{if(e.key==='Enter'){const f=$('mlist').querySelector('.mi');if(f)f.click()}};
@@ -773,13 +885,48 @@ document.addEventListener('click',e=>{
   }
   if(e.target.closest('[data-retry]')){const c=active();if(c&&!busy){e.target.closest('.msg').remove();run()}}
 });
+$('sync-retry').onclick=()=>{if(requireAccount())persist()};
+$('auth-retry').onclick=()=>{if(currentUser)applySession({user:currentUser},'RETRY')};
+$('account').onclick=()=>openAccount(currentUser?'Signed in as '+(currentUser.email||'your account')+'.':'Sign in or create an account.');
+$('auth-close').onclick=()=>$('auth-dlg').close();
+$('auth-import').onclick=async()=>{
+  if(!requireAccount())return;const old=store.get('fw.chats',[]);
+  if(!Array.isArray(old)||!old.length){$('auth-message').textContent='No previous browser chats found.';return;}
+  if(!confirm('Import '+old.length+' old browser chats into your signed-in account? This uploads chat content to Supabase. API keys and connectors will not be imported.'))return;
+  const imported=old.filter(c=>c&&Array.isArray(c.msgs)).map(c=>({id:uid(),title:typeof c.title==='string'?c.title:'Imported chat',msgs:c.msgs.filter(m=>m&&['user','assistant'].includes(m.role)&&typeof m.content==='string').map(m=>({role:m.role,content:m.content,...(typeof m.reasoning==='string'?{reasoning:m.reasoning}:{})}))}));
+  if(!imported.length){$('auth-message').textContent='No valid chats found to import.';return;}
+  const id=currentUser.id,generation=accountGeneration;chats=[...imported,...chats];cur=imported[0].id;save();renderAll();$('auth-import').hidden=true;await saveQueue;if(generation!==accountGeneration)return;
+  if(syncFailed){$('auth-message').textContent='Import is in this browser session but failed to sync. Retry by editing a chat.';return;}
+  store.set('gemby.imported.'+id,true);$('auth-message').textContent='Imported and synced '+imported.length+' chats.';
+};
+async function authAction(action){
+  await serverConfigPromise;
+  if(!accountClient){$('auth-message').textContent=accountConfigError||'Account client is not ready.';return;}
+  const email=$('auth-email').value.trim(),password=$('auth-password').value;
+  try{
+    let result;
+    if(currentUser&&['login','signup','logout'].includes(action)){if(action==='logout')ctrl?.abort();await saveQueue;if(syncFailed&&!confirm('Changes could not be synced. Continue and risk losing them?'))return;}
+    if(action==='login')result=await accountClient.auth.signInWithPassword({email,password});
+    if(action==='signup')result=await accountClient.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+    if(action==='reset')result=await accountClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+    if(action==='update')result=await accountClient.auth.updateUser({password});
+    if(action==='logout'){ctrl?.abort();result=await accountClient.auth.signOut();}
+    if(result.error)throw result.error;
+    $('auth-password').value='';
+    if(action==='signup'&&!result.data.session)$('auth-message').textContent='Check your email to confirm your account before signing in.';
+    if(action==='reset')$('auth-message').textContent='If that email is registered, check your inbox for a reset link.';
+    if(action==='update'){recoveryMode=false;$('auth-update').hidden=true;$('auth-message').textContent='Password updated.';}
+    if(action==='logout'){$('auth-logout').hidden=true;$('auth-message').textContent='Signed out.';}
+  }catch(e){$('auth-message').textContent=e.message||'Account action failed.';}
+}
+$('auth-login').onclick=()=>authAction('login');$('auth-signup').onclick=()=>authAction('signup');$('auth-reset').onclick=()=>authAction('reset');$('auth-update').onclick=()=>authAction('update');$('auth-logout').onclick=()=>authAction('logout');
 $('theme').onclick=()=>{
   const root=document.documentElement;
   const dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
   root.dataset.theme=dark?'light':'dark';store.set('fw.theme',root.dataset.theme);
 };
 const th=store.get('fw.theme',null);if(th)document.documentElement.dataset.theme=th;
-$('settings').onclick=()=>{$('k-or').value=cfg.orKey;$('k-nv').value=cfg.nvKey;$('u-nv').value=cfg.nvUrl;$('web-search').checked=cfg.webSearch;$('box-enabled').checked=cfg.boxEnabled;$('box-token').value=cfg.boxToken;$('box-status').textContent='';$('mcp-status').textContent='';$('settings-error').textContent='';$('mcp-name').value='';$('mcp-url').value='';$('mcp-token').value='';$('mcp-json').value=JSON.stringify(cfg.mcpConfig||{mcpServers:{}},null,2);$('skills-json').value=JSON.stringify(cfg.skills||DEFAULT_SKILLS,null,2);renderSkillToggles();$('dlg').showModal()};
+$('settings').onclick=()=>{if(!requireAccount())return;$('ai-key').value=cfg.provider==='codecraft'?'':cfg.aiKey;$('ai-key').disabled=cfg.provider==='codecraft';$('key-provider').textContent=cfg.provider==='openrouter'?'OpenRouter':cfg.provider==='nvidia'?'NVIDIA NIM':'CodeCraft';$('key-hint').textContent=cfg.provider==='codecraft'?'CodeCraft uses the Vercel server key for approved accounts; usage may incur charges. No key is entered here.':'Switching AI providers clears this key. Connectors may require their own separate credentials.';$('codecraft-status').hidden=cfg.provider!=='codecraft';$('codecraft-status').textContent='Vercel: key '+(codecraftConfigured?'configured':'missing')+' · allowed emails '+(codecraftAccessConfigured?'configured':'missing')+'. Presence only; access and validity are not verified.'+(codecraftError?' '+codecraftError:'');$('web-search').checked=cfg.webSearch;$('allow-proposals').checked=cfg.allowProposals!==false;$('box-enabled').checked=cfg.boxEnabled;$('box-token').value=cfg.boxToken;$('box-status').textContent='';$('mcp-status').textContent='';$('settings-error').textContent='';$('mcp-name').value='';$('mcp-url').value='';$('mcp-token').value='';$('mcp-json').value=JSON.stringify(cfg.mcpConfig||{mcpServers:{}},null,2);renderMcpToggles();$('skills-json').value=JSON.stringify(cfg.skills||DEFAULT_SKILLS,null,2);renderSkillToggles();$('dlg').showModal()};
 $('box-test').onclick=async()=>{if(busy){$('box-status').textContent='Wait for the current reply to finish.';return}const b=$('box-test');b.disabled=true;$('box-status').textContent='Connecting…';try{const box=await connectBox($('box-token').value.trim());$('box-status').textContent='Connected: '+box.tools.length+' tools available.'}catch(e){$('box-status').textContent=e.message}finally{b.disabled=false}};
 function renderSkillToggles(){
   const container=$('skill-toggles');container.replaceChildren();
@@ -787,12 +934,17 @@ function renderSkillToggles(){
   skills.forEach((skill,i)=>{const label=document.createElement('label'),box=document.createElement('input');box.type='checkbox';box.style.width='auto';box.checked=!!skill.enabled;box.onchange=()=>{const current=parseSkills($('skills-json').value);current[i].enabled=box.checked;$('skills-json').value=JSON.stringify(current,null,2)};label.append(box,document.createTextNode(' '+skill.name));container.appendChild(label);});
 }
 $('skills-json').oninput=renderSkillToggles;
+function renderMcpToggles(){
+  const container=$('mcp-toggles');container.replaceChildren();let config;try{config=parseMcpConfig($('mcp-json').value)}catch{return}
+  for(const [name,server] of Object.entries(config.mcpServers)){const label=document.createElement('label'),box=document.createElement('input');box.type='checkbox';box.style.width='auto';box.checked=!server.disabled;box.onchange=()=>{const current=parseMcpConfig($('mcp-json').value);current.mcpServers[name].disabled=!box.checked;$('mcp-json').value=JSON.stringify(current,null,2)};label.append(box,document.createTextNode(' Enable '+name));container.appendChild(label);}
+}
+$('mcp-json').oninput=renderMcpToggles;
 $('mcp-add').onclick=()=>{try{
   const config=parseMcpConfig($('mcp-json').value),name=$('mcp-name').value.trim(),url=$('mcp-url').value.trim(),token=$('mcp-token').value.trim();
   if(!name)throw new UserError('Enter a server name.');
   if(Object.hasOwn(config.mcpServers,name))throw new UserError('A server with that name already exists.');
   config.mcpServers[name]={url,...(token?{headers:{Authorization:'Bearer '+token}}:{})};
-  parseMcpConfig(JSON.stringify(config));$('mcp-json').value=JSON.stringify(config,null,2);$('mcp-token').value='';$('mcp-status').textContent='Added. Save settings to keep it.';
+  parseMcpConfig(JSON.stringify(config));$('mcp-json').value=JSON.stringify(config,null,2);renderMcpToggles();$('mcp-token').value='';$('mcp-status').textContent='Added. Save settings to keep it.';
 }catch(e){$('mcp-status').textContent=e.message}};
 $('mcp-test').onclick=async()=>{if(busy){$('mcp-status').textContent='Wait for the current reply to finish.';return}const b=$('mcp-test');b.disabled=true;try{
   const config=parseMcpConfig($('mcp-json').value),servers=Object.entries(config.mcpServers).filter(([,server])=>!server.disabled);
@@ -804,7 +956,7 @@ $('s-cancel').onclick=()=>$('dlg').close();
 $('s-save').onclick=()=>{
   let mcpConfig,skills;try{mcpConfig=parseMcpConfig($('mcp-json').value);skills=parseSkills($('skills-json').value)}catch(e){$('settings-error').textContent=e.message;return}
   cfg.mcpConfig=mcpConfig;cfg.skills=skills;
-  cfg.orKey=$('k-or').value.trim();cfg.nvKey=$('k-nv').value.trim();cfg.nvUrl=$('u-nv').value.trim()||'/api/nvidia';cfg.webSearch=$('web-search').checked;cfg.boxEnabled=$('box-enabled').checked;cfg.boxToken=$('box-token').value.trim();
+  cfg.aiKey=cfg.provider==='codecraft'?'':$('ai-key').value.trim();cfg.webSearch=$('web-search').checked;cfg.allowProposals=$('allow-proposals').checked;cfg.boxEnabled=$('box-enabled').checked;cfg.boxToken=$('box-token').value.trim();
   saveCfg();$('dlg').close();loadModels();
 };
 renderModels();route();loadModels();
