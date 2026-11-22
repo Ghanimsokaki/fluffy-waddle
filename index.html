@@ -105,8 +105,8 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
 header.top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-bottom:1px solid var(--border);background:var(--panel);flex-wrap:wrap}
 #menu{display:none;border:0;background:none;font-size:22px}
 header.top h1{font-size:15px;margin:0;font-weight:600;flex:1;min-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.seg{display:flex;background:var(--side);border:1px solid var(--border);border-radius:11px;padding:3px}
-.seg button{border:0;background:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg{display:flex;overflow-x:auto;max-width:100%;background:var(--side);border:1px solid var(--border);border-radius:11px;padding:3px}
+.seg button{flex-shrink:0;border:0;background:none;border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
 .seg button.on{background:var(--panel);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 select{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;padding:6px 10px;font:inherit;font-size:13px;max-width:240px}
 #feed{flex:1;overflow:auto;padding:24px 18px;scroll-behavior:smooth;position:relative}
@@ -263,7 +263,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
       <div class="grid">
         <div class="card reveal left"><div class="ic">🛣️</div><h3>OpenRouter</h3><p>The free-tier model list loads live, so you always see what is currently available. Works directly from the browser.</p></div>
         <div class="card reveal right" style="--d:.1s"><div class="ic">🟩</div><h3>NVIDIA NIM</h3><p>Nemotron, Llama, Mistral and more from build.nvidia.com. Uses the small included proxy because NVIDIA blocks direct browser calls.</p></div>
-        <div class="card reveal" style="--d:.2s"><div class="ic">✦</div><h3>CodeCraft</h3><p>Explore available models through a server-configured key. Access is limited to approved accounts.</p></div>
+        <div class="card reveal" style="--d:.2s"><div class="ic">✦</div><h3>CodeCraft</h3><p>Explore available models through a server-configured key. Available to signed-in accounts with confirmed email.</p></div>
       </div>
     </div>
   </section>
@@ -338,6 +338,8 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
         <button data-p="openrouter">OpenRouter</button>
         <button data-p="nvidia">NVIDIA NIM</button>
         <button data-p="codecraft">CodeCraft</button>
+        <button data-p="moduck">Moduck</button>
+        <button data-p="bytez">Bytez</button>
       </div>
       <div class="mp">
         <button class="ghost" id="mbtn" aria-haspopup="listbox"><span id="mname">Model</span> ▾</button>
@@ -362,14 +364,14 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 <div id="toast"></div>
 <dialog id="dlg">
   <h3>Settings</h3>
-  <p>OpenRouter and NVIDIA use one browser-supplied AI key at a time. CodeCraft uses the server key for approved accounts. Connector credentials stay in this browser, unencrypted.</p>
+  <p>OpenRouter and NVIDIA use one browser-supplied AI key at a time. CodeCraft, Moduck and Bytez use server keys for confirmed accounts. Connector credentials stay in this browser, unencrypted.</p>
   <h4>AI provider key</h4>
   <label for="ai-key">API key for <span id="key-provider">OpenRouter</span></label><input id="ai-key" type="password" autocomplete="off" placeholder="Paste your provider API key">
   <p id="key-hint">Switching AI providers clears this key. Connectors may require their own separate credentials.</p>
   <p id="codecraft-status" role="status" hidden></p>
   <h4>Web search</h4>
   <label><input id="web-search" type="checkbox" style="width:auto"> Enable OpenRouter web search</label>
-  <p>OpenRouter may charge for searches, even with free models. The model decides when to search. This search option is not available with NVIDIA or CodeCraft.</p>
+  <p>OpenRouter may charge for searches, even with free models. The model decides when to search. This search option is available only with OpenRouter.</p>
   <h4>box by Simular MCP</h4>
   <label for="box-token">Simular box personal key</label><input id="box-token" type="password" autocomplete="off" placeholder="cb_…">
   <p>Connects to Simular's cloud computer via the app server. Get a personal key at <a href="https://box.simular.ai/access" target="_blank" rel="noopener noreferrer">box.simular.ai/access</a>. Tool results are sent to the AI provider. Every tool call requires approval.</p>
@@ -422,7 +424,7 @@ const OR_URL='https://openrouter.ai/api/v1';
 const FALLBACK={
   openrouter:['google/gemma-4-26b-a4b-it:free','nvidia/nemotron-3-ultra-550b-a55b:free','nvidia/nemotron-3.5-lightning:free'],
   nvidia:['nvidia/llama-3.1-nemotron-70b-instruct','nvidia/nemotron-3-super-120b-a12b','deepseek-ai/deepseek-v4.1-flash','mistralai/mistral-large-2-instruct'],
-  codecraft:[]
+  codecraft:[],moduck:[],bytez:[]
 };
 const NOT_CHAT=/embed|guard|safety|reward|parse|retriev|rerank|deplot|fuyu|vlm|topic-control|nemoguard|clip|paligemma/i;
 
@@ -433,8 +435,10 @@ const DEFAULT_SKILLS=[
 ];
 const DEFAULT_CFG=()=>({provider:'openrouter',model:{},aiKey:'',webSearch:false,allowProposals:true,boxEnabled:false,boxToken:'',mcpConfig:{mcpServers:{}},skills:structuredClone(DEFAULT_SKILLS)});
 let chats=[],cur=null,cfg=DEFAULT_CFG();
-let models={openrouter:FALLBACK.openrouter.slice(),nvidia:FALLBACK.nvidia.slice(),codecraft:[]};
-let codecraftConfigured=false,codecraftAccessConfigured=false,codecraftError='',codecraftCapabilities=Object.create(null);
+let models={openrouter:FALLBACK.openrouter.slice(),nvidia:FALLBACK.nvidia.slice(),codecraft:[],moduck:[],bytez:[]};
+let codecraftConfigured=false,codecraftError='',codecraftCapabilities=Object.create(null);
+const extraShared={moduck:{configured:false,error:''},bytez:{configured:false,error:''}};
+const isShared=p=>['codecraft','moduck','bytez'].includes(p);
 let busy=false,ctrl=null,accountClient=null,currentUser=null,accountReady=false,accountGeneration=0,saveQueue=Promise.resolve(),recoveryMode=false,syncFailed=false,accountConfigError='';
 const privateKey=id=>'gemby.private.'+id;
 const uid=()=>crypto.randomUUID();
@@ -458,7 +462,7 @@ const saveCfg=()=>persist();
 const serverConfigPromise=fetch('/api/config',{cache:'no-store'}).then(async r=>{
   if(!r.ok)throw new Error('Cannot load account configuration.');
   const c=await r.json();
-  codecraftConfigured=c.codecraftConfigured===true;codecraftAccessConfigured=c.codecraftAccessConfigured===true;
+  codecraftConfigured=c.codecraftConfigured===true;for(const p of ['moduck','bytez']){extraShared[p].configured=c[p+'Configured']===true;}
   if(!c.supabaseUrl||!c.supabaseAnonKey)throw new Error('Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY and redeploy.');
   if(!window.createGembyClient)throw new Error('Account client is unavailable. Run npm install and npm run build.');
   accountClient=window.createGembyClient(c.supabaseUrl,c.supabaseAnonKey);
@@ -469,7 +473,7 @@ async function applySession(session,event){
   const user=session?.user||null;
   if(user&&currentUser?.id===user.id&&accountReady)return;
   const generation=++accountGeneration;
-  ctrl?.abort();if($('dlg').open)$('dlg').close();for(const id of ['ai-key','box-token','mcp-token','mcp-json'])$(id).value='';currentUser=user;accountReady=false;models.codecraft=[];codecraftCapabilities=Object.create(null);codecraftError='';syncFailed=false;$('sync-retry').hidden=true;$('auth-retry').hidden=true;$('sync-status').textContent=user?'Loading account…':'Sign in to sync';chats=[];cur=null;cfg=DEFAULT_CFG();
+  ctrl?.abort();if($('dlg').open)$('dlg').close();for(const id of ['ai-key','box-token','mcp-token','mcp-json'])$(id).value='';currentUser=user;accountReady=false;models.codecraft=[];models.moduck=[];models.bytez=[];for(const p of ['moduck','bytez'])extraShared[p].error='';codecraftCapabilities=Object.create(null);codecraftError='';syncFailed=false;$('sync-retry').hidden=true;$('auth-retry').hidden=true;$('sync-status').textContent=user?'Loading account…':'Sign in to sync';chats=[];cur=null;cfg=DEFAULT_CFG();
   $('account').textContent=user?'Account':'Sign in';renderAll();
   if(!user){if(event==='SIGNED_OUT'){$('auth-email').value='';$('auth-password').value='';toast('Signed out.')}return;}
   $('auth-message').textContent='Loading your account…';
@@ -478,8 +482,8 @@ async function applySession(session,event){
   if(error){$('auth-message').textContent='Could not load your account: '+error.message+'. Check the database setup.';$('auth-retry').hidden=false;openAccount();return;}
   const settings=data?.settings&&typeof data.settings==='object'?data.settings:{};
   const local=store.get(privateKey(user.id),{});
-  const provider=['openrouter','nvidia','codecraft'].includes(settings.provider)?settings.provider:'openrouter';
-  cfg=Object.assign(DEFAULT_CFG(),{provider,model:settings.model||{},webSearch:!!settings.webSearch,allowProposals:settings.allowProposals!==false,boxEnabled:!!settings.boxEnabled,skills:Array.isArray(settings.skills)?settings.skills:structuredClone(DEFAULT_SKILLS)}, {aiKey:local.provider===provider&&provider!=='codecraft'&&typeof local.aiKey==='string'?local.aiKey:'',boxToken:typeof local.boxToken==='string'?local.boxToken:'',mcpConfig:local.mcpConfig||{mcpServers:{}}});
+  const provider=['openrouter','nvidia','codecraft','moduck','bytez'].includes(settings.provider)?settings.provider:'openrouter';
+  cfg=Object.assign(DEFAULT_CFG(),{provider,model:settings.model||{},webSearch:!!settings.webSearch,allowProposals:settings.allowProposals!==false,boxEnabled:!!settings.boxEnabled,skills:Array.isArray(settings.skills)?settings.skills:structuredClone(DEFAULT_SKILLS)}, {aiKey:local.provider===provider&&!isShared(provider)&&typeof local.aiKey==='string'?local.aiKey:'',boxToken:typeof local.boxToken==='string'?local.boxToken:'',mcpConfig:local.mcpConfig||{mcpServers:{}}});
   chats=Array.isArray(data?.chats)?data.chats:[];cur=chats[0]?.id||null;accountReady=true;$('sync-status').textContent='Synced';renderAll();loadModels();
   $('auth-message').textContent=recoveryMode?'Enter a new password below, then select Set new password.':'Signed in as '+(user.email||'your account')+'.';
   $('auth-logout').hidden=false;
@@ -542,16 +546,16 @@ function countUp(wrap){
 }
 
 async function codecraftSession(){
-  if(!accountClient||!currentUser)throw new UserError('Sign in to use CodeCraft.');
+  if(!accountClient||!currentUser)throw new UserError('Sign in to use this provider.');
   const id=currentUser.id,{data,error}=await accountClient.auth.getSession();
-  if(error||!data?.session?.access_token||data.session.user?.id!==id||currentUser?.id!==id)throw new UserError('Your account session expired.','Sign in again to use CodeCraft.');
+  if(error||!data?.session?.access_token||data.session.user?.id!==id||currentUser?.id!==id)throw new UserError('Your account session expired.','Sign in again to use this provider.');
   return data.session.access_token;
 }
 /* ---------- models ---------- */
 async function loadCodecraftModels(){
   if(cfg.provider==='codecraft'&&currentUser&&accountReady){
     const id=currentUser.id,generation=accountGeneration;try{
-      if(!codecraftConfigured||!codecraftAccessConfigured)throw new UserError('CodeCraft needs its Vercel key and allowed emails configured.');
+      if(!codecraftConfigured)throw new UserError('CodeCraft needs its Vercel key configured.');
       const token=await codecraftSession();if(currentUser?.id!==id||generation!==accountGeneration)return;const r=await fetch('/api/codecraft/models',{headers:{Authorization:'Bearer '+token}});
       if(!r.ok)throw explain(r.status,await r.text(),'CodeCraft');
       const j=await r.json();const items=Array.isArray(j.data)?j.data.filter(m=>m&&typeof m.id==='string'&&m.id.length>0&&(!m.type||m.type==='chat')):[];const ids=items.map(m=>m.id).sort();
@@ -561,8 +565,25 @@ async function loadCodecraftModels(){
   }
   renderModels();
 }
+async function loadExtraModels(p){
+  if(!currentUser||!accountReady)return;
+  const id=currentUser.id,generation=accountGeneration,state=extraShared[p];
+  try{
+    if(!state.configured)throw new UserError(p+' needs its Vercel key configured.');
+    const token=await codecraftSession();if(currentUser?.id!==id||generation!==accountGeneration)return;
+    const r=await fetch('/api/'+p+'/models',{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok)throw explain(r.status,await r.text(),p);
+    const j=await r.json();
+    const list=p==='bytez'?j.output:j.data;
+    const ids=Array.isArray(list)?list.map(m=>p==='bytez'?m.modelId:m.id).filter(x=>typeof x==='string'&&x.length>0):[];
+    if(!ids.length)throw new UserError('No models returned for '+p+'.');
+    if(currentUser?.id===id&&generation===accountGeneration){models[p]=[...new Set(ids)].sort();state.error='';}
+  }catch(e){if(currentUser?.id===id&&generation===accountGeneration){models[p]=[];state.error=e.message||'Could not load models.';}}
+  renderModels();
+}
 async function loadModels(){
   if(cfg.provider==='codecraft')void loadCodecraftModels();
+  else if(['moduck','bytez'].includes(cfg.provider))void loadExtraModels(cfg.provider);
   try{
     const r=await fetch(OR_URL+'/models');const j=await r.json();
     const free=j.data.filter(m=>String(m.pricing?.prompt)==='0'&&String(m.pricing?.completion)==='0'&&(m.architecture?.output_modalities||['text']).every(x=>x==='text')).map(m=>m.id).sort();
@@ -585,8 +606,8 @@ function renderModels(){
   $('mname').textContent=sel?shortName(sel):'Choose model';
   document.querySelectorAll('#prov button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   const q=$('msearch').value.trim().toLowerCase();
-  const items=list.filter(m=>m.toLowerCase().includes(q));
-  $('mlist').innerHTML=items.map(m=>`<button class="mi${m===sel?' on':''}" role="option" data-m="${esc(m)}"><b>${esc(shortName(m))}</b><small>${esc(m.includes('/')?m.split('/')[0]:'')}</small></button>`).join('')||'<p class="none">'+esc(p==='codecraft'&&codecraftError?codecraftError:'No models match')+'</p>';
+  const items=list.filter(m=>m.toLowerCase().includes(q)).slice(0,500);
+  $('mlist').innerHTML=items.map(m=>`<button class="mi${m===sel?' on':''}" role="option" data-m="${esc(m)}"><b>${esc(shortName(m))}</b><small>${esc(m.includes('/')?m.split('/')[0]:'')}</small></button>`).join('')||'<p class="none">'+esc(p==='codecraft'&&codecraftError?codecraftError:extraShared[p]?.error||'No models match')+'</p>';
   buildTrack();
 }
 function buildTrack(){
@@ -637,7 +658,8 @@ function renderAll(){renderList();renderChat();renderModels()}
 
 /* ---------- API ---------- */
 function endpoint(){
-  if(cfg.provider==='codecraft')return{url:'/api/codecraft/chat/completions',key:'',hasKey:codecraftConfigured&&codecraftAccessConfigured,sessionAuth:true,name:'CodeCraft',headers:{}};
+  if(['moduck','bytez'].includes(cfg.provider)){const p=cfg.provider;return{url:'/api/'+p+'/chat/completions',key:'',hasKey:extraShared[p].configured,sessionAuth:true,name:p==='moduck'?'Moduck':'Bytez',headers:{}};}
+  if(cfg.provider==='codecraft')return{url:'/api/codecraft/chat/completions',key:'',hasKey:codecraftConfigured,sessionAuth:true,name:'CodeCraft',headers:{}};
   if(cfg.provider==='openrouter')return{url:OR_URL+'/chat/completions',key:cfg.aiKey,hasKey:!!cfg.aiKey,name:'OpenRouter',
     headers:{'HTTP-Referer':location.origin||'https://localhost','X-Title':'Gemby AIs'}};
   return{url:'/api/nvidia/chat/completions',key:cfg.aiKey,hasKey:!!cfg.aiKey,name:'NVIDIA NIM',headers:{}};
@@ -646,7 +668,7 @@ class UserError extends Error{constructor(m,hint){super(m);this.hint=hint}}
 function explain(status,body,name){
   let msg=body;try{const j=JSON.parse(body);msg=j.error?.message||j.detail||j.message||body}catch{}
   msg=String(msg).slice(0,300);
-  if(name==='CodeCraft'&&(status===401||status===403))return new UserError(`CodeCraft access denied. ${msg}`,'Sign in with a confirmed, allowed account.');
+  if(name==='CodeCraft'&&(status===401||status===403))return new UserError(`CodeCraft access denied. ${msg}`,'Sign in with a confirmed account.');
   if(status===401||status===403)return new UserError(`${name} rejected the API key.`,'Open Settings and check the key.');
   if(status===402)return new UserError(`${name} says this needs credits.`,'Choose a model ending in :free or add credits.');
   if(status===404)return new UserError(`Model or endpoint not found. ${msg}`,'Pick another model.');
@@ -734,14 +756,15 @@ async function stream(history,bub,expectedGeneration){
   const checkAccount=()=>{if(expectedGeneration!==undefined&&expectedGeneration!==accountGeneration)throw new DOMException('Account changed','AbortError')};
   await serverConfigPromise;checkAccount();
   const ep=endpoint(),model=cfg.model[cfg.provider];
-  if(!ep.hasKey)throw new UserError(`No ${ep.name} API key yet.`,ep.sessionAuth?'Configure CODECRAFT_API_KEY and CODECRAFT_ALLOWED_EMAILS in Vercel.':'Add your own API key in Settings.');
-  if(ep.sessionAuth&&(!model||!models.codecraft.includes(model)))throw new UserError('No CodeCraft model is available yet.','Check the model list, account access, and Vercel configuration.');
+  if(!ep.hasKey)throw new UserError(`No ${ep.name} API key yet.`,ep.sessionAuth?'Configure the provider key in Vercel.':'Add your own API key in Settings.');
+  if(ep.sessionAuth&&(!model||!models[cfg.provider].includes(model)))throw new UserError('No '+ep.name+' model is available yet.','Check the model list, account access, and Vercel configuration.');
   if(!model)throw new UserError('No model selected.');
   if(cfg.webSearch&&cfg.provider!=='openrouter')throw new UserError('Web search is only available with OpenRouter.','Switch providers or turn off web search in Settings.');
   ctrl=new AbortController();
   const messages=history.map(m=>({role:m.role,content:m.content}));
   const skills=parseSkills(JSON.stringify(cfg.skills||[])).filter(s=>s.enabled);
   if(skills.length)messages.unshift({role:'system',content:'User-selected skills (instructions):\n\n'+skills.map(s=>s.name+':\n'+s.instructions).join('\n\n')});
+  if(cfg.provider==='moduck'&&(cfg.boxEnabled||Object.values(cfg.mcpConfig?.mcpServers||{}).some(s=>!s.disabled)))throw new UserError('Moduck text chat does not support connector tools.','Disable connectors for this request.');
   const servers=[];
   if(cfg.boxEnabled){bub.textContent='Connecting to Simular box…';servers.push({name:'Simular box',connection:await connectBox(cfg.boxToken,ctrl.signal)});checkAccount();}
   const mcp=parseMcpConfig(JSON.stringify(cfg.mcpConfig||{mcpServers:{}}));
@@ -753,18 +776,20 @@ async function stream(history,bub,expectedGeneration){
     registered.push({alias,tool,server});if(registered.length>200)throw new UserError('Too many MCP tools across enabled servers. Disable some servers.');
   }
   const tools=registered.map(({alias,tool,server})=>({type:'function',function:{name:alias,description:'['+server.name+' / '+tool.name+'] '+(tool.description||''),parameters:tool.inputSchema||{type:'object',properties:{}}}}));
-  if(cfg.allowProposals!==false)tools.push({type:'function',function:{name:'gemby_propose_connector',description:'Propose a remote MCP connector for the user to approve. Only a name and HTTPS URL; no tokens, headers or credentials. New connectors remain disabled until the user enables them.',parameters:{type:'object',properties:{name:{type:'string',description:'A short name'},url:{type:'string',description:'Public HTTPS Streamable HTTP MCP endpoint without query parameters'}},required:['name','url'],additionalProperties:false}}});
+  if(cfg.provider!=='moduck'&&cfg.allowProposals!==false)tools.push({type:'function',function:{name:'gemby_propose_connector',description:'Propose a remote MCP connector for the user to approve. Only a name and HTTPS URL; no tokens, headers or credentials. New connectors remain disabled until the user enables them.',parameters:{type:'object',properties:{name:{type:'string',description:'A short name'},url:{type:'string',description:'Public HTTPS Streamable HTTP MCP endpoint without query parameters'}},required:['name','url'],additionalProperties:false}}});
   if(cfg.webSearch)tools.push({type:'openrouter:web_search'});
-  if(ep.sessionAuth&&tools.length&&Array.isArray(codecraftCapabilities[model])&&!codecraftCapabilities[model].includes('tools'))throw new UserError('This CodeCraft model does not support tool calling.','Pick another model or disable connector tools and proposals in Settings.');
+  if(cfg.provider==='codecraft'&&tools.length&&Array.isArray(codecraftCapabilities[model])&&!codecraftCapabilities[model].includes('tools'))throw new UserError('This CodeCraft model does not support tool calling.','Pick another model or disable connector tools and proposals in Settings.');
   let reason='',text='',citations=[];
   for(let round=0;round<6;round++){
     let r;
     try{
-      const body={model,stream:true,max_tokens:2048,messages};if(tools.length)body.tools=tools;
+      const body=cfg.provider==='moduck'?{model,stream:false,max_tokens:1024,messages}:{model,stream:true,max_tokens:2048,messages};if(tools.length)body.tools=tools;
+      if(cfg.provider==='moduck'&&(messages.length>10||new TextEncoder().encode(messages.map(m=>m.content||'').join('')).length>4096))throw new UserError('Moduck text chat supports at most 10 messages and 4096 UTF-8 bytes.','Start a new chat or shorten your message.');
       const credential=ep.sessionAuth?await codecraftSession():ep.key;checkAccount();
-      r=await fetch(ep.url,{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json',Accept:'text/event-stream',...(credential?{Authorization:'Bearer '+credential}:{}),...ep.headers},body:JSON.stringify(body)});
+      r=await fetch(ep.url,{method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json',Accept:cfg.provider==='moduck'?'application/json':'text/event-stream',...(credential?{Authorization:'Bearer '+credential}:{}),...ep.headers},body:JSON.stringify(body)});
     }catch(e){if(e.name==='AbortError'||e instanceof UserError)throw e;throw new UserError(`Could not reach ${ep.name}.`,'Check your connection and proxy settings.');}
     if(!r.ok)throw explain(r.status,await r.text(),ep.name);
+    if(cfg.provider==='moduck'){const j=await r.json();checkAccount();const content=j.choices?.[0]?.message?.content;if(typeof content!=='string'||!content.trim())throw new UserError('Moduck returned an empty reply.');bub.innerHTML=md(content)+(j.choices?.[0]?.finish_reason==='length'?'<p>Response truncated by the model.</p>':'');return {content,reasoning:''};}
     const reader=r.body.getReader(),dec=new TextDecoder();let buf='',calls=[],lastPaint=0;
     text='';reason='';citations=[];
     const paint=force=>{const now=performance.now();if(!force&&now-lastPaint<60)return;lastPaint=now;const follow=nearBottom();bub.classList.toggle('caret',!force);bub.innerHTML=(reason?thinkHTML(reason):'')+(text?md(text):'<span class="dots"><i></i><i></i><i></i></span>');if(follow)toBottom()};
@@ -848,7 +873,7 @@ $('menu').onclick=()=>$('side').classList.toggle('open');
 $('home').onclick=()=>{location.hash='top'};
 $('down').onclick=toBottom;
 $('feed').addEventListener('scroll',()=>$('down').classList.toggle('show',!nearBottom()),{passive:true});
-$('prov').onclick=e=>{const b=e.target.closest('button');if(!b||!requireAccount())return;if(cfg.provider!==b.dataset.p){if(cfg.aiKey&&!confirm('Switching provider clears your current AI key. Continue?'))return;cfg.provider=b.dataset.p;cfg.aiKey='';saveCfg();toast('Add a key for the selected provider.')}renderModels();if(cfg.provider==='codecraft')loadModels()};
+$('prov').onclick=e=>{const b=e.target.closest('button');if(!b||!requireAccount())return;if(cfg.provider!==b.dataset.p){if(cfg.aiKey&&!confirm('Switching provider clears your current AI key. Continue?'))return;cfg.provider=b.dataset.p;cfg.aiKey='';saveCfg();toast(isShared(cfg.provider)?'Using the server key for confirmed accounts.':'Add a key for the selected provider.')}renderModels();if(isShared(cfg.provider))loadModels()};
 $('mbtn').onclick=e=>{e.stopPropagation();const h=$('mpop').hidden;$('mpop').hidden=!h;if(h){$('msearch').value='';renderModels();$('msearch').focus()}};
 $('msearch').oninput=renderModels;
 $('msearch').onkeydown=e=>{if(e.key==='Enter'){const f=$('mlist').querySelector('.mi');if(f)f.click()}};
@@ -926,7 +951,7 @@ $('theme').onclick=()=>{
   root.dataset.theme=dark?'light':'dark';store.set('fw.theme',root.dataset.theme);
 };
 const th=store.get('fw.theme',null);if(th)document.documentElement.dataset.theme=th;
-$('settings').onclick=()=>{if(!requireAccount())return;$('ai-key').value=cfg.provider==='codecraft'?'':cfg.aiKey;$('ai-key').disabled=cfg.provider==='codecraft';$('key-provider').textContent=cfg.provider==='openrouter'?'OpenRouter':cfg.provider==='nvidia'?'NVIDIA NIM':'CodeCraft';$('key-hint').textContent=cfg.provider==='codecraft'?'CodeCraft uses the Vercel server key for approved accounts; usage may incur charges. No key is entered here.':'Switching AI providers clears this key. Connectors may require their own separate credentials.';$('codecraft-status').hidden=cfg.provider!=='codecraft';$('codecraft-status').textContent='Vercel: key '+(codecraftConfigured?'configured':'missing')+' · allowed emails '+(codecraftAccessConfigured?'configured':'missing')+'. Presence only; access and validity are not verified.'+(codecraftError?' '+codecraftError:'');$('web-search').checked=cfg.webSearch;$('allow-proposals').checked=cfg.allowProposals!==false;$('box-enabled').checked=cfg.boxEnabled;$('box-token').value=cfg.boxToken;$('box-status').textContent='';$('mcp-status').textContent='';$('settings-error').textContent='';$('mcp-name').value='';$('mcp-url').value='';$('mcp-token').value='';$('mcp-json').value=JSON.stringify(cfg.mcpConfig||{mcpServers:{}},null,2);renderMcpToggles();$('skills-json').value=JSON.stringify(cfg.skills||DEFAULT_SKILLS,null,2);renderSkillToggles();$('dlg').showModal()};
+$('settings').onclick=()=>{if(!requireAccount())return;$('ai-key').value=isShared(cfg.provider)?'':cfg.aiKey;$('ai-key').disabled=isShared(cfg.provider);$('key-provider').textContent=cfg.provider==='openrouter'?'OpenRouter':cfg.provider==='nvidia'?'NVIDIA NIM':cfg.provider==='codecraft'?'CodeCraft':cfg.provider==='moduck'?'Moduck':'Bytez';$('key-hint').textContent=isShared(cfg.provider)?$('key-provider').textContent+' uses the Vercel server key for confirmed accounts; usage may incur charges. No key is entered here.':'Switching AI providers clears this key. Connectors may require their own separate credentials.';$('codecraft-status').hidden=!isShared(cfg.provider);const state=cfg.provider==='codecraft'?{configured:codecraftConfigured,error:codecraftError}:extraShared[cfg.provider];$('codecraft-status').textContent=state?'Vercel: key '+(state.configured?'configured':'missing')+'. Presence only; access and validity are not verified.'+(state.error?' '+state.error:''):'';$('web-search').checked=cfg.webSearch;$('allow-proposals').checked=cfg.allowProposals!==false;$('box-enabled').checked=cfg.boxEnabled;$('box-token').value=cfg.boxToken;$('box-status').textContent='';$('mcp-status').textContent='';$('settings-error').textContent='';$('mcp-name').value='';$('mcp-url').value='';$('mcp-token').value='';$('mcp-json').value=JSON.stringify(cfg.mcpConfig||{mcpServers:{}},null,2);renderMcpToggles();$('skills-json').value=JSON.stringify(cfg.skills||DEFAULT_SKILLS,null,2);renderSkillToggles();$('dlg').showModal()};
 $('box-test').onclick=async()=>{if(busy){$('box-status').textContent='Wait for the current reply to finish.';return}const b=$('box-test');b.disabled=true;$('box-status').textContent='Connecting…';try{const box=await connectBox($('box-token').value.trim());$('box-status').textContent='Connected: '+box.tools.length+' tools available.'}catch(e){$('box-status').textContent=e.message}finally{b.disabled=false}};
 function renderSkillToggles(){
   const container=$('skill-toggles');container.replaceChildren();
@@ -956,7 +981,7 @@ $('s-cancel').onclick=()=>$('dlg').close();
 $('s-save').onclick=()=>{
   let mcpConfig,skills;try{mcpConfig=parseMcpConfig($('mcp-json').value);skills=parseSkills($('skills-json').value)}catch(e){$('settings-error').textContent=e.message;return}
   cfg.mcpConfig=mcpConfig;cfg.skills=skills;
-  cfg.aiKey=cfg.provider==='codecraft'?'':$('ai-key').value.trim();cfg.webSearch=$('web-search').checked;cfg.allowProposals=$('allow-proposals').checked;cfg.boxEnabled=$('box-enabled').checked;cfg.boxToken=$('box-token').value.trim();
+  cfg.aiKey=isShared(cfg.provider)?'':$('ai-key').value.trim();cfg.webSearch=$('web-search').checked;cfg.allowProposals=$('allow-proposals').checked;cfg.boxEnabled=$('box-enabled').checked;cfg.boxToken=$('box-token').value.trim();
   saveCfg();$('dlg').close();loadModels();
 };
 renderModels();route();loadModels();

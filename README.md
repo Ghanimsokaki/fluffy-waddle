@@ -30,13 +30,15 @@ npm start                 # builds browser auth client and listens on http://loc
 npm test
 ```
 
-On Vercel, import the repository using the **Other** framework preset. The build command and output directory are in `vercel.json`. Functions proxy NVIDIA, Simular, and CodeCraft requests to fixed upstream hosts. The chat/tool proxies require a user-supplied bearer token but do not authenticate users themselves. Protect or rate-limit your deployment as appropriate; they are not multi-tenant gateways.
+On Vercel, import the repository using the **Other** framework preset. The build command and output directory are in `vercel.json`. Functions proxy NVIDIA, Simular, CodeCraft, Moduck, and Bytez requests to fixed upstream hosts. The chat/tool proxies require a user-supplied bearer token but do not authenticate users themselves. Protect or rate-limit your deployment as appropriate; they are not multi-tenant gateways.
 
 ## One AI key
 
-Choose OpenRouter or NVIDIA in the chat header, then add the corresponding API key in **Settings**. Only one browser AI-provider key is stored at a time; switching provider clears it. OpenRouter calls go directly to OpenRouter; NVIDIA calls use the included fixed-destination proxy. Neither silently falls back to a server key. CodeCraft is a separate, explicitly selected provider that uses the Vercel key described below. AI keys are not sent to MCP servers. A separate connector may require its own credentials—an AI-provider key does not authenticate third-party services.
+Choose OpenRouter or NVIDIA in the chat header, then add the corresponding API key in **Settings**. Only one browser AI-provider key is stored at a time; switching provider clears it. OpenRouter calls go directly to OpenRouter; NVIDIA calls use the included fixed-destination proxy. Neither silently falls back to a server key. CodeCraft, Moduck, and Bytez are separately selected providers using the Vercel keys described below. AI keys are not sent to MCP servers. A separate connector may require its own credentials—an AI-provider key does not authenticate third-party services.
 
-OpenRouter web search is optional in Settings and may incur charges even for free models. It requires an OpenRouter model/provider that supports the search tool. This OpenRouter search option is not supported with NVIDIA or CodeCraft.
+OpenRouter web search is optional in Settings and may incur charges even for free models. It requires an OpenRouter model/provider that supports the search tool. This OpenRouter search option is not supported with NVIDIA, CodeCraft, Moduck, or Bytez.
+
+Existing `CODECRAFT_ALLOWED_EMAILS`, `MODUCK_ALLOWED_EMAILS`, and `BYTEZ_ALLOWED_EMAILS` environment variables are ignored and can be removed after deploying this version. They no longer restrict access.
 
 ## CodeCraft on Vercel
 
@@ -45,11 +47,24 @@ CodeCraft is an OpenAI-compatible provider; Gemby AIs uses its fixed `https://co
 | Name | Value |
 | --- | --- |
 | `CODECRAFT_API_KEY` | Your CodeCraft API key (`cc_…`) |
-| `CODECRAFT_ALLOWED_EMAILS` | A comma-separated list of Supabase account emails allowed to spend that key, e.g. `you@example.com` |
 
-Also configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` as described above. Select the desired Production/Preview/Development environments and redeploy. Create/sign in to a Supabase account with a **confirmed email** from the allowlist, select **CodeCraft** in the chat header, and choose a model from the live list. The app does not invent model IDs; select a Sonnet model only if CodeCraft actually lists it. The key needs CodeCraft's inference and `models:read` scopes. Model availability, costs, and quotas are determined by CodeCraft.
+Also configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` as described above. Select the desired Production/Preview/Development environments and redeploy. Create/sign in to a Supabase account with a **confirmed email**, select **CodeCraft** in the chat header, and choose a model from the live list. The app does not invent model IDs; select a Sonnet model only if CodeCraft actually lists it. The key needs CodeCraft's inference and `models:read` scopes. Model availability, costs, and quotas are determined by CodeCraft.
 
-The server checks each request's session with Supabase and rejects unconfirmed or non-allowlisted accounts before it uses the server key. The session is not forwarded to CodeCraft; the CodeCraft key is not returned to the browser or sent to MCP servers. **This is not a spending limit or rate limiter:** every approved account can spend the shared key's quota. Limit the allowlist, configure provider budgets and rate limits, and protect your deployment before production. An empty allowlist disables CodeCraft access. This feature has automated mocked tests but has not been verified against a live Supabase or CodeCraft account.
+The server checks each request's session with Supabase and rejects unconfirmed accounts before it uses the server key. The session is not forwarded to CodeCraft; the CodeCraft key is not returned to the browser or sent to MCP servers. **Any confirmed account can spend the shared key's quota**, including anyone who can register if sign-ups are open. There is no app-level rate or spending limit. Configure provider budgets and rate limits, restrict sign-ups if appropriate, and protect your deployment before production. This feature has automated mocked tests but has not been verified against a live Supabase or CodeCraft account.
+
+## Moduck and Bytez on Vercel
+
+Both providers use server-side keys for any confirmed Supabase account. Set these values in **Vercel → Project → Settings → Environment Variables**, select the environments you use, and redeploy:
+
+| Variable | Value |
+| --- | --- |
+| `MODUCK_API_KEY` | Your Moduck text-scoped API key |
+| `MODUCK_API_BASE_URL` | The HTTPS API service origin supplied by Moduck for your account, without `/v1` (for example, `https://api.moduck.ai`) |
+| `BYTEZ_API_KEY` | Your Bytez API key |
+
+Also configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` as above. The Moduck origin is restricted to `moduck.ai` and its subdomains, without credentials, ports, paths, query strings or fragments; if your account uses a different origin, it will not work without a security-reviewed configuration change. Do not paste keys into chat or commit them. After deploying, sign in with a confirmed email, select a provider and choose from its returned model list. Bytez's list is filtered to its open-source chat catalog; some models may require additional access or billing, and its closed-source models may require an additional provider key, which this integration does not configure.
+
+Moduck's documented text contract is non-streaming, limited to ten messages and 4096 UTF-8 bytes of message content. It does not support connector tools, proposals or OpenRouter web search in this integration. For Bytez, streaming and tools depend on the selected model. Both services may charge for use. There is no application-level rate or spending limit: any confirmed account can spend the shared quota, including anyone who can register if sign-ups are open. Configure provider budgets and rate limits, restrict sign-ups if appropriate, and protect your deployment. Neither provider has been tested against a live account; model availability and API behavior must be verified with your own credentials.
 
 ## MCP connectors and skills
 

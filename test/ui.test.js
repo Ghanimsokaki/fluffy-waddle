@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const {Window}=require('happy-dom');
 
 const pause=()=>new Promise(resolve=>setTimeout(resolve,100));
-async function makePage(configured=true,codecraft=false){
+async function makePage(configured=true,codecraft=false,extras=false){
   const html=fs.readFileSync('index.html','utf8');
   const script=html.split('<script>')[1].split('</script>')[0];
   const window=new Window({url:'https://app.example/#chat'});
@@ -14,12 +14,14 @@ async function makePage(configured=true,codecraft=false){
     auth:{onAuthStateChange(fn){callback=fn;fn('INITIAL_SESSION',null)},async signInWithPassword({email}){session={access_token:'supabase-session',user:{id:email,email}};callback('SIGNED_IN',session);return {data:{},error:null}},async getSession(){return {data:{session},error:null}},async signOut(){session=null;callback('SIGNED_OUT',null);return {error:null}}},
     from(){return {select(){return {eq(){return {async maybeSingle(){if(readFailures>0){readFailures--;return {data:null,error:{message:'Database unavailable'}}}return {data:{chats:[],settings:{}},error:null}}}}}},async upsert(data){writes.push(data);if(writeFailures>0){writeFailures--;return {error:{message:'Network unavailable'}}}return {error:null}}}}
   };
-  window.structuredClone=structuredClone;window.TextDecoder=TextDecoder;
+  window.structuredClone=structuredClone;window.TextDecoder=TextDecoder;window.TextEncoder=TextEncoder;
   window.createGembyClient=()=>client;
   window.fetch=async (url,options={})=>{
-    if(url==='/api/config')return new Response(JSON.stringify(configured?{supabaseUrl:'https://example.supabase.co',supabaseAnonKey:'public-key',codecraftConfigured:codecraft,codecraftAccessConfigured:codecraft}:{}),{status:200});
+    if(url==='/api/config')return new Response(JSON.stringify(configured?{supabaseUrl:'https://example.supabase.co',supabaseAnonKey:'public-key',codecraftConfigured:codecraft,moduckConfigured:extras,bytezConfigured:extras}:{}),{status:200});
     if(url==='/api/codecraft/models'){codecraftHeaders.push(options.headers);return new Response(JSON.stringify({data:[{id:'test-sonnet',type:'chat',capabilities:['tools','streaming']}]}),{status:200,headers:{'content-type':'application/json'}})}
     if(url==='/api/codecraft/chat/completions'){codecraftHeaders.push(options.headers);return new Response('data: '+JSON.stringify({choices:[{delta:{content:'Hello from CodeCraft'}}]})+'\n\ndata: [DONE]\n\n',{status:200,headers:{'content-type':'text/event-stream'}})}
+    if(url==='/api/moduck/models'||url==='/api/bytez/models'){codecraftHeaders.push(options.headers);return new Response(JSON.stringify(url.includes('moduck')?{data:[{id:'moduck-demo-chat'}]}:{output:[{modelId:'test/chat',task:'chat'}]}),{status:200})}
+    if(url==='/api/moduck/chat/completions'||url==='/api/bytez/chat/completions'){codecraftHeaders.push({headers:options.headers,body:JSON.parse(options.body)});return url.includes('moduck')?new Response(JSON.stringify({choices:[{message:{content:'Hello from Moduck'},finish_reason:'stop'}]}),{status:200}):new Response('data: '+JSON.stringify({choices:[{delta:{content:'Hello from Bytez'}}]})+'\n\ndata: [DONE]\n\n',{status:200});}
     if(String(url).endsWith('/models'))return new Response(JSON.stringify({data:[]}),{status:200});
     throw new Error('Unexpected network request '+url);
   };
@@ -117,5 +119,18 @@ test('CodeCraft model selection and chat use only the account session, not a bro
     d.getElementById('input').value='Hello';d.getElementById('form').requestSubmit();await pause();
     assert.match(d.getElementById('wrap').textContent,/Hello from CodeCraft/);
     assert.equal(codecraftHeaders.length,2);assert.equal(codecraftHeaders[0].Authorization,'Bearer supabase-session');assert.equal(codecraftHeaders[1].Authorization,'Bearer supabase-session');
+  }finally{await window.happyDOM.abort();}
+});
+
+test('Moduck and Bytez use confirmed account sessions and their respective chat contracts',async()=>{
+  const {window,codecraftHeaders}=await makePage(true,false,true);const d=window.document;
+  try{
+    d.getElementById('auth-email').value='alice@example.com';d.getElementById('auth-password').value='password';d.getElementById('auth-login').click();await pause();
+    for(const [p,model] of [['moduck','moduck-demo-chat'],['bytez','test/chat']]){
+      d.querySelector('[data-p="'+p+'"]').click();await pause();assert.equal(d.getElementById('mname').textContent,model.split('/').pop());
+      d.getElementById('settings').click();assert.equal(d.getElementById('ai-key').disabled,true);d.getElementById('s-cancel').click();
+      d.getElementById('input').value='Hello';d.getElementById('form').requestSubmit();await pause();assert.match(d.getElementById('wrap').textContent,new RegExp('Hello from '+(p==='moduck'?'Moduck':'Bytez')));
+      const request=codecraftHeaders.at(-1);assert.equal(request.headers.Authorization,'Bearer supabase-session');assert.equal(request.body.stream,p!=='moduck');if(p==='moduck')assert.equal(request.body.tools,undefined);
+    }
   }finally{await window.happyDOM.abort();}
 });

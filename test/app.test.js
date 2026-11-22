@@ -118,7 +118,7 @@ test('configuration only exposes public Supabase config, not provider credential
   const before=names.map(n=>process.env[n]);
   process.env.OPENROUTER_API_KEY='or-secret';process.env.NVIDIA_API_KEY='nv-secret';process.env.BOX_ACCESS_TOKEN='box-secret';
   process.env.SUPABASE_URL='https://example.supabase.co';process.env.SUPABASE_ANON_KEY='public-key';process.env.CODECRAFT_API_KEY='cc-secret';process.env.CODECRAFT_ALLOWED_EMAILS='owner@example.com';
-  try {await serverTest(async base=>{const res=await fetch(base+'/api/config');const raw=await res.text();assert.equal(res.headers.get('cache-control'),'no-store');assert.deepEqual(JSON.parse(raw),{supabaseUrl:'https://example.supabase.co',supabaseAnonKey:'public-key',codecraftConfigured:true,codecraftAccessConfigured:true});assert.doesNotMatch(raw,/or-secret|nv-secret|box-secret|cc-secret|owner@example.com/);});}
+  try {await serverTest(async base=>{const res=await fetch(base+'/api/config');const raw=await res.text();assert.equal(res.headers.get('cache-control'),'no-store');assert.deepEqual(JSON.parse(raw),{supabaseUrl:'https://example.supabase.co',supabaseAnonKey:'public-key',codecraftConfigured:true,moduckConfigured:false,bytezConfigured:false});assert.doesNotMatch(raw,/or-secret|nv-secret|box-secret|cc-secret|owner@example.com/);});}
   finally{names.forEach((n,i)=>before[i]===undefined?delete process.env[n]:process.env[n]=before[i]);}
 });
 
@@ -290,7 +290,7 @@ test('row level security schema restricts all profile operations to the authenti
   assert.match(sql,/revoke all on public\.gemby_profiles from public, anon/i);
 });
 
-test('CodeCraft verifies confirmed allowed accounts and never forwards their session', async () => {
+test('CodeCraft accepts any confirmed account and never forwards its session', async () => {
   const https=require('node:https'), {PassThrough}=require('node:stream');
   const original=https.request,names=['SUPABASE_URL','SUPABASE_ANON_KEY','CODECRAFT_API_KEY','CODECRAFT_ALLOWED_EMAILS'];
   const before=names.map(n=>process.env[n]);let captured=[],verified={id:'user-a',email:'owner@example.com',email_confirmed_at:'2026-01-01T00:00:00Z'},verificationStatus=200;
@@ -301,6 +301,7 @@ test('CodeCraft verifies confirmed allowed accounts and never forwards their ses
     up.on('finish',()=>{const r=new PassThrough();r.statusCode=isVerification?verificationStatus:200;r.headers={'content-type':'application/json'};callback(r);r.end(isVerification?JSON.stringify(verified):'{"data":[]}')});return up;
   };
   try{await serverTest(async base=>{
+    delete process.env.CODECRAFT_ALLOWED_EMAILS;
     const missing=await fetch(base+'/api/codecraft/models');assert.equal(missing.status,401);assert.equal(captured.length,0);
     let r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer user-session'}});assert.equal(r.status,200);
     assert.equal(captured.length,2);assert.equal(captured[0].options.hostname,'example.supabase.co');assert.equal(captured[0].config.headers.authorization,'Bearer user-session');
@@ -308,9 +309,9 @@ test('CodeCraft verifies confirmed allowed accounts and never forwards their ses
     assert.doesNotMatch(await r.text(),/cc-secret|user-session/);
     r=await fetch(base+'/api/codecraft/chat/completions',{method:'POST',headers:{authorization:'Bearer user-session','content-type':'application/json'},body:'{}'});assert.equal(r.status,200);assert.equal(captured[3].options.path,'/v1/chat/completions');assert.equal(captured[3].config.headers.authorization,'Bearer cc-secret');
     verificationStatus=401;r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer invalid'}});assert.equal(r.status,401);assert.equal(captured.length,5);
-    verificationStatus=200;verified={id:'user-b',email:'other@example.com',email_confirmed_at:'now'};r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer outsider'}});assert.equal(r.status,403);assert.equal(captured.length,6);
-    verified={id:'user-a',email:'owner@example.com',email_confirmed_at:null};r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer unconfirmed'}});assert.equal(r.status,403);assert.equal(captured.length,7);
-    delete process.env.CODECRAFT_ALLOWED_EMAILS;r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer user-session'}});assert.equal(r.status,503);assert.equal(captured.length,7);
+    verificationStatus=200;process.env.CODECRAFT_ALLOWED_EMAILS='owner@example.com';verified={id:'user-b',email:'other@example.com',email_confirmed_at:'now'};r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer another-user'}});assert.equal(r.status,200);assert.equal(captured.length,7);
+    verified={id:'user-a',email:'owner@example.com',email_confirmed_at:null};r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer unconfirmed'}});assert.equal(r.status,403);assert.equal(captured.length,8);
+    delete process.env.CODECRAFT_API_KEY;r=await fetch(base+'/api/codecraft/models',{headers:{authorization:'Bearer user-session'}});assert.equal(r.status,503);assert.equal(captured.length,8);
     const config=await (await fetch(base+'/api/config')).text();assert.doesNotMatch(config,/cc-secret|owner@example.com/);
   });}finally{https.request=original;names.forEach((n,i)=>before[i]===undefined?delete process.env[n]:process.env[n]=before[i]);}
 });
@@ -325,8 +326,28 @@ test('CodeCraft provider setting is restored per account without reusing a brows
 test('saved CodeCraft model is preserved while the live model list is loading',()=>{
   const html=fs.readFileSync('index.html','utf8');const source=html.slice(html.indexOf('const shortName='),html.indexOf('function buildTrack()'));
   const elements={mname:{textContent:''},msearch:{value:''},mlist:{innerHTML:''}};
-  const ctx={cfg:{provider:'codecraft',model:{codecraft:'saved-sonnet'}},models:{codecraft:[]},codecraftError:'',document:{querySelectorAll:()=>[]},$:id=>elements[id],esc:x=>x,buildTrack:()=>{}};
+  const ctx={cfg:{provider:'codecraft',model:{codecraft:'saved-sonnet'}},models:{codecraft:[]},codecraftError:'',extraShared:{},document:{querySelectorAll:()=>[]},$:id=>elements[id],esc:x=>x,buildTrack:()=>{}};
   vm.createContext(ctx);vm.runInContext(source,ctx);ctx.renderModels();
   assert.equal(ctx.cfg.model.codecraft,'saved-sonnet');assert.equal(elements.mname.textContent,'Choose model');
   ctx.models.codecraft=['another-model','saved-sonnet'];ctx.renderModels();assert.equal(elements.mname.textContent,'saved-sonnet');
+});
+
+test('Moduck and Bytez server keys require a confirmed session and use fixed destinations', async()=>{
+  const https=require('node:https'),{PassThrough}=require('node:stream'),original=https.request;
+  const names=['SUPABASE_URL','SUPABASE_ANON_KEY','MODUCK_API_KEY','MODUCK_API_BASE_URL','MODUCK_ALLOWED_EMAILS','BYTEZ_API_KEY','BYTEZ_ALLOWED_EMAILS'],before=names.map(n=>process.env[n]);
+  Object.assign(process.env,{SUPABASE_URL:'https://example.supabase.co',SUPABASE_ANON_KEY:'public-key',MODUCK_API_KEY:'moduck-secret',MODUCK_API_BASE_URL:'https://api.moduck.ai',MODUCK_ALLOWED_EMAILS:'owner@example.com',BYTEZ_API_KEY:'bytez-secret',BYTEZ_ALLOWED_EMAILS:'owner@example.com'});
+  let requests=[],user={id:'a',email:'owner@example.com',email_confirmed_at:'now'};
+  https.request=(options,second,third)=>{const verify=options instanceof URL,config=verify?second:options,cb=verify?third:second;requests.push({verify,options,config});const up=new PassThrough();up.on('finish',()=>{const r=new PassThrough();r.statusCode=200;r.headers={'content-type':'application/json'};cb(r);r.end(verify?JSON.stringify(user):'{"output":[]}')});return up;};
+  try{await serverTest(async base=>{
+    for(const p of ['moduck','bytez']){
+      delete process.env[p.toUpperCase()+'_ALLOWED_EMAILS'];
+      let r=await fetch(base+'/api/'+p+'/models');assert.equal(r.status,401);
+      r=await fetch(base+'/api/'+p+'/models',{headers:{authorization:'Bearer session-secret'}});assert.equal(r.status,200);
+      const call=requests.at(-1);assert.equal(call.options.host,p==='moduck'?'api.moduck.ai':'api.bytez.com');assert.equal(call.options.path,p==='moduck'?'/v1/models':'/models/v2/list/models?task=chat');assert.equal(call.config.headers.authorization,p==='moduck'?'Bearer moduck-secret':'bytez-secret');
+      r=await fetch(base+'/api/'+p+'/chat/completions',{method:'POST',headers:{authorization:'Bearer session-secret'},body:'{}'});assert.equal(r.status,200);assert.equal(requests.at(-1).options.path,p==='moduck'?'/v1/chat/completions':'/models/v2/openai/v1/chat/completions');assert.equal(requests.at(-1).config.headers.authorization,'Bearer '+p+'-secret');
+      process.env[p.toUpperCase()+'_ALLOWED_EMAILS']='owner@example.com';user={id:'b',email:'other@example.com',email_confirmed_at:'now'};let count=requests.length;r=await fetch(base+'/api/'+p+'/models',{headers:{authorization:'Bearer session-secret'}});assert.equal(r.status,200);assert.equal(requests.length,count+2);user.email_confirmed_at=null;count=requests.length;r=await fetch(base+'/api/'+p+'/models',{headers:{authorization:'Bearer session-secret'}});assert.equal(r.status,403);assert.equal(requests.length,count+1);user={id:'a',email:'owner@example.com',email_confirmed_at:'now'};
+    }
+    process.env.MODUCK_API_BASE_URL='https://attacker.example';let count=requests.length;let r=await fetch(base+'/api/moduck/models',{headers:{authorization:'Bearer session-secret'}});assert.equal(r.status,503);assert.equal(requests.length,count);
+    const config=await (await fetch(base+'/api/config')).text();assert.doesNotMatch(config,/moduck-secret|bytez-secret|owner@example.com|session-secret/);
+  });}finally{https.request=original;names.forEach((n,i)=>before[i]===undefined?delete process.env[n]:process.env[n]=before[i]);}
 });
