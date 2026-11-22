@@ -44,17 +44,21 @@ function publicSupabaseKey(value) {
   return key;
 }
 
-// Verify the Supabase session server-side and require an explicitly allowed,
-// confirmed email before using the deployer's shared CodeCraft credential.
-function codecraftProxy(req, res, upstreamPath) {
+// Verify the Supabase session and confirmed email before using a shared provider key.
+function codecraftProxy(req, res, upstreamPath, provider = 'codecraft') {
+  const names = {codecraft: 'CodeCraft', moduck: 'Moduck', bytez: 'Bytez'};
+  const name = names[provider], prefix = provider.toUpperCase();
   const token = (req.headers.authorization || '').match(/^Bearer\s+(\S+)$/i)?.[1];
-  if (!token) return apiError(res, 401, 'Sign in to use CodeCraft.');
-  const key = (process.env.CODECRAFT_API_KEY || '').trim();
-  const allowed = (process.env.CODECRAFT_ALLOWED_EMAILS || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  if (!token) return apiError(res, 401, 'Sign in to use '+name+'.');
+  const key = (process.env[prefix+'_API_KEY'] || '').trim();
   const anon = publicSupabaseKey(process.env.SUPABASE_ANON_KEY);
   let authUrl;try {authUrl = new URL('/auth/v1/user', process.env.SUPABASE_URL);} catch {}
-  if (!key || !allowed.length || !anon || !authUrl || authUrl.protocol !== 'https:' || authUrl.username || authUrl.password) {
-    return apiError(res, 503, 'CodeCraft is not configured. Set its key, allowed emails, and Supabase settings.');
+  let destination;
+  if(provider==='moduck') {
+    try { const u=new URL(process.env.MODUCK_API_BASE_URL); if(u.protocol==='https:' && !u.username && !u.password && !u.port && u.pathname==='/' && !u.search && !u.hash && (u.hostname==='moduck.ai'||u.hostname.endsWith('.moduck.ai'))) destination=u.hostname; } catch {}
+  } else destination=provider==='bytez'?'api.bytez.com':'codecraftapi.com';
+  if (!key || !anon || !authUrl || authUrl.protocol !== 'https:' || authUrl.username || authUrl.password || !destination) {
+    return apiError(res, 503, name+' is not configured. Set its key and Supabase settings'+(provider==='moduck'?' and MODUCK_API_BASE_URL':'')+'.');
   }
   let done = false;
   const fail = (status, message) => {if (done) return;done = true;apiError(res,status,message);};
@@ -67,10 +71,10 @@ function codecraftProxy(req, res, upstreamPath) {
       if(response.statusCode===401||response.statusCode===403)return fail(401,'Your session is invalid or expired. Sign in again.');
       if(response.statusCode!==200)return fail(502,'Could not verify account with Supabase.');
       let user;try{user=JSON.parse(raw)}catch{return fail(502,'Invalid account verification response.');}
-      if(typeof user.id!=='string'||typeof user.email!=='string'||!user.email_confirmed_at||!allowed.includes(user.email.trim().toLowerCase()))return fail(403,'This account is not approved for CodeCraft or its email is unconfirmed.');
+      if(typeof user.id!=='string'||typeof user.email!=='string'||!user.email.trim()||!user.email_confirmed_at)return fail(403,'A confirmed email is required to use '+name+'.');
       done=true;
-      // Never forward the Supabase session to CodeCraft, or the CodeCraft key to the browser.
-      proxy(req,res,'codecraftapi.com',upstreamPath,{},'Bearer '+key);
+      // Never forward the Supabase session to the provider or its key to the browser.
+      proxy(req,res,destination,upstreamPath,{},provider==='bytez' && req.method==='GET'?key:'Bearer '+key);
     });
   });
   verification.on('timeout',()=>verification.destroy(new Error('timeout')));
@@ -91,10 +95,16 @@ function handler(req, res) {
     if (!sameOrigin(req)) { res.writeHead(403); return res.end('Origin not allowed'); }
     if (url.pathname === '/api/config' && req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
-      return res.end(JSON.stringify({ supabaseUrl: process.env.SUPABASE_URL?.trim() || '', supabaseAnonKey: publicSupabaseKey(process.env.SUPABASE_ANON_KEY), codecraftConfigured: !!process.env.CODECRAFT_API_KEY?.trim(), codecraftAccessConfigured: !!(process.env.CODECRAFT_ALLOWED_EMAILS || '').split(',').some(x=>x.trim()) }));
+      return res.end(JSON.stringify({ supabaseUrl: process.env.SUPABASE_URL?.trim() || '', supabaseAnonKey: publicSupabaseKey(process.env.SUPABASE_ANON_KEY), codecraftConfigured: !!process.env.CODECRAFT_API_KEY?.trim(), moduckConfigured: !!process.env.MODUCK_API_KEY?.trim() && !!process.env.MODUCK_API_BASE_URL?.trim(), bytezConfigured: !!process.env.BYTEZ_API_KEY?.trim() }));
     }
     if ((url.pathname==='/api/codecraft/models' && req.method==='GET') || (url.pathname==='/api/codecraft/chat/completions' && req.method==='POST')) {
       return codecraftProxy(req,res,url.pathname==='/api/codecraft/models'?'/v1/models':'/v1/chat/completions');
+    }
+    for (const provider of ['moduck','bytez']) {
+      if (url.pathname==='/api/'+provider+'/models' && req.method==='GET')
+        return codecraftProxy(req,res,provider==='bytez'?'/models/v2/list/models?task=chat':'/v1/models',provider);
+      if (url.pathname==='/api/'+provider+'/chat/completions' && req.method==='POST')
+        return codecraftProxy(req,res,provider==='bytez'?'/models/v2/openai/v1/chat/completions':'/v1/chat/completions',provider);
     }
     if (['/api/nvidia/chat/completions','/api/openrouter/chat/completions','/api/box'].includes(url.pathname) && !/^Bearer\s+\S+$/i.test(req.headers.authorization || '')) {
       res.writeHead(401, { 'content-type': 'application/json', 'cache-control': 'no-store' });
