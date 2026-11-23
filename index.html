@@ -94,12 +94,12 @@ aside .brand{padding:4px 6px}
 .new{border:1px dashed var(--border);background:var(--panel);border-radius:12px;padding:10px;text-align:left;font-weight:600;transition:.15s}
 .new:hover{border-color:var(--accent);color:var(--accent)}
 #chats{flex:1;overflow:auto;display:flex;flex-direction:column;gap:4px}
-.chat{display:flex;align-items:center;gap:6px;border:0;background:none;border-radius:10px;padding:8px 10px;text-align:left}
-.chat span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chat:hover{background:var(--panel)}
-.chat.active{background:var(--panel);box-shadow:inset 3px 0 0 var(--accent)}
-.chat .del{opacity:0;color:var(--muted);padding:0 4px;font-style:normal}
-.chat:hover .del{opacity:1}
+#chats .chat{display:flex;align-items:center;gap:6px;border:0;background:none;border-radius:10px;padding:8px 10px;text-align:left}
+#chats .chat span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#chats .chat:hover{background:var(--panel)}
+#chats .chat.active{background:var(--panel);box-shadow:inset 3px 0 0 var(--accent)}
+#chats .chat .del{opacity:0;color:var(--muted);padding:0 4px;font-style:normal}
+#chats .chat:hover .del{opacity:1}
 .foot{display:flex;gap:8px}.foot .ghost{flex:1}.sync-status{padding:0 6px;color:var(--muted);font-size:11px}
 main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
 header.top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-bottom:1px solid var(--border);background:var(--panel);flex-wrap:wrap}
@@ -210,9 +210,12 @@ input:focus{outline:2px solid var(--accent);border-color:transparent}
 #mpop{position:absolute;right:0;top:calc(100% + 8px);width:360px;max-width:92vw;background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(30,20,80,.25);padding:10px;z-index:20;animation:in .2s both}
 #mpop[hidden]{display:none}
 #mlist{max-height:320px;overflow:auto;margin-top:8px;display:flex;flex-direction:column;gap:2px}
-.mi{display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;background:none;border-radius:10px;padding:8px 10px;text-align:left}
+.mi{display:flex;flex-direction:column;align-items:stretch;gap:4px;border:0;background:none;border-radius:10px;padding:10px;text-align:left;min-width:0}
+.mi .model-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;min-width:0}
 .mi b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mi small{color:var(--muted);font-size:12px;flex:none}
+.mi small{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.mi .model-specs{line-height:1.45}
+.model-note{color:var(--muted);font-size:11px;line-height:1.4;margin:8px 3px 0}
 .mi:hover{background:var(--side)}
 .mi.on{background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
 .none{color:var(--muted);text-align:center;margin:14px 0}
@@ -221,12 +224,114 @@ kbd{font:inherit;font-size:11px;border:1px solid var(--border);border-bottom-wid
 #toast.show{opacity:1;transform:translate(-50%,0)}
 main{background:radial-gradient(900px 500px at 90% -10%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 60%),radial-gradient(700px 420px at -5% 110%,color-mix(in srgb,var(--accent2) 11%,transparent),transparent 60%),var(--bg)}
 header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel) 78%,transparent);backdrop-filter:blur(14px)}
-.chat.active{background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
+#chats .chat.active{background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
 .empty .logo{animation:float 3.5s ease-in-out infinite}
 @keyframes float{50%{transform:translateY(-8px) rotate(-4deg)}}
 .chips button{box-shadow:var(--shadow)}
 #send:not(:disabled):hover{transform:scale(1.08)}
 #send{transition:transform .15s}
+
+/* ---------- Gemby cosmic refresh ---------- */
+:root{--accent:#7958f5;--accent2:#e467c9;--accent3:#62e6d3;--surface-glow:rgba(121,88,245,.17)}
+:focus-visible{outline:3px solid #a88cff;outline-offset:3px}
+nav{max-width:1600px;margin:auto;padding-inline:clamp(22px,4vw,64px)}
+nav:not(.stuck) .brand{color:#fff}
+nav:not(.stuck) a.l{color:#d2cce8}
+nav:not(.stuck) a.l:hover{color:#fff}
+nav .brand{letter-spacing:-.045em;font-size:18px}
+nav .logo,aside .logo{box-shadow:0 0 22px rgba(166,126,255,.32)}
+nav a.l{font-size:13px;margin-inline:10px}
+nav .primary{border:1px solid rgba(255,255,255,.24);box-shadow:0 8px 32px rgba(104,72,219,.28)}
+.hero{background:#090b19 url('/gemby-cosmos.jpg') center / cover no-repeat;color:#fff;text-align:left;min-height:760px;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(8,9,21,.96) 0%,rgba(8,9,21,.83) 39%,rgba(8,9,21,.08) 74%),linear-gradient(0deg,rgba(8,9,21,.78),transparent 36%);pointer-events:none}
+.hero .blob{opacity:.12;filter:blur(100px)}
+.hero .inner{max-width:1320px;width:100%;transform:none;opacity:1}
+.hero-layout{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(360px,.94fr);align-items:center;gap:clamp(30px,5vw,80px);min-height:590px}
+.hero-copy{max-width:680px;position:relative;z-index:2}
+.hero .badge{background:rgba(160,132,255,.1);border-color:rgba(191,169,255,.24);color:#e2d9ff;font-size:10px;letter-spacing:.16em;font-weight:750;padding:8px 13px}
+.hero .badge i{width:6px;height:6px;background:#9fffe8}
+.badge-star{font-size:15px;color:#c5a8ff;margin-left:4px}
+.hero h1{font-size:clamp(54px,6.5vw,96px);line-height:.99;letter-spacing:-.065em;margin:26px 0;font-weight:760}
+.hero .grad{background-image:linear-gradient(105deg,#bca3ff 8%,#f4a0ed 55%,#91f3e3);text-shadow:0 0 55px rgba(191,124,255,.16)}
+.hero p{font-size:clamp(16px,1.5vw,19px);color:#b9b6ce;max-width:475px;line-height:1.75;margin:0 0 32px}
+.hero-actions{display:flex;align-items:center;gap:30px;flex-wrap:wrap}
+.hero .cta.big{display:inline-flex;gap:35px;align-items:center;background:linear-gradient(115deg,#a28aff,#d287ee);color:#100c20;border:1px solid rgba(255,255,255,.36);border-radius:13px;padding:15px 19px 15px 22px;box-shadow:0 10px 35px rgba(148,91,241,.32);font-size:14px;font-weight:750}
+.hero .cta.big span{font-size:19px;line-height:1}
+.hero-link{color:#e3def1;font-size:13px;text-decoration:none;font-weight:600}
+.hero-link span{color:#b5a0ed;margin-left:7px}
+.hero-link:hover{color:#fff}
+.hero-note{display:flex;align-items:center;gap:12px;margin-top:62px;color:#e4def5;font-size:10px;font-weight:750;letter-spacing:.13em;line-height:1.7}
+.hero-note small{color:#9691aa;letter-spacing:0;font-size:12px;font-weight:400}
+.note-orb{height:37px;width:37px;border:1px solid #ffffff26;border-radius:50%;display:grid;place-items:center;background:#ffffff0a;color:#c9b6ff;font-size:18px}
+.hero-visual{position:relative;align-self:stretch;min-height:500px;display:flex;align-items:flex-end;padding-bottom:60px}
+.visual-label{position:absolute;top:13%;right:0;color:#e0d7f5;font-size:9px;font-weight:700;letter-spacing:.2em;display:flex;align-items:center;gap:8px}
+.visual-label span{width:7px;height:7px;border-radius:50%;background:#96f6d9;box-shadow:0 0 12px #96f6d9}
+.visual-label b{font-size:9px;color:#a8a1bb;margin-left:14px}
+.preview{width:min(100%,420px);max-width:none;margin:0 0 0 auto;border:1px solid rgba(221,207,255,.22);border-radius:18px;background:rgba(23,21,43,.73);color:#f8f4ff;backdrop-filter:blur(24px);box-shadow:0 24px 75px rgba(0,0,0,.38),0 0 60px rgba(160,97,255,.12);transform:none;overflow:hidden}
+.preview .bar{background:rgba(255,255,255,.035);border-color:#ffffff12;padding:13px 17px;align-items:center;gap:9px}
+.preview .bar strong{font-size:12px;letter-spacing:-.02em}.preview .bar em{font-size:9px;letter-spacing:.13em;color:#a5a0ba;margin-left:auto}
+.preview .bar i{width:6px;height:6px;background:#8beccb;box-shadow:0 0 9px #8beccb}
+.preview-spark,.preview-avatar{display:grid;place-items:center;flex:none;background:linear-gradient(135deg,#aa8bff,#e088dd);color:#211633;border-radius:8px;font-weight:800}
+.preview-spark{height:23px;width:23px}.preview-avatar{height:25px;width:25px;font-size:12px}
+.preview .body{min-height:166px;padding:20px;gap:16px}
+.preview .u{font-size:12px;line-height:1.5;background:linear-gradient(115deg,#8568dc,#b178d9);border-radius:13px 13px 4px 13px;padding:10px 13px}
+.preview .a{display:flex;align-items:flex-start;gap:10px;border:0;background:transparent;padding:0;font-size:12px;line-height:1.65;min-height:55px;color:#e5e0f0}
+#demoA{padding-top:2px}.preview .a.t::after{display:none}#demoA:empty::after{content:'•••';color:#ad9add;letter-spacing:3px}
+.preview-footer{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid #ffffff12;color:#aaa4bf;font-size:10px}.preview-footer>span:first-child{color:#d2a5fd;font-size:14px}.preview-arrow{margin-left:auto;color:#cab9fa;font-size:14px}
+.scrollcue{border-color:#ffffff82;bottom:30px;transform:scale(.8)}.scrollcue::after{background:#fff}
+#landing section:not(.hero){overflow:hidden}
+#providers,#features{background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 55%)}
+.eyebrow{text-align:center;color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.18em;margin-bottom:16px}
+h2.t{font-size:clamp(32px,4.5vw,52px);line-height:1.12;letter-spacing:-.05em}
+p.sub{font-size:15px;margin-top:16px}
+.grid{gap:16px}
+.card{border-radius:22px;padding:26px;box-shadow:0 12px 45px rgba(55,40,105,.06);background:linear-gradient(150deg,color-mix(in srgb,var(--panel) 94%,var(--accent)),var(--panel) 60%)}
+.card:hover{transform:translateY(-7px);box-shadow:0 18px 44px rgba(95,70,170,.16)}
+.card .ic{border:1px solid color-mix(in srgb,var(--accent) 14%,transparent);font-size:20px}
+.card h3{letter-spacing:-.025em}.card p{font-size:14px;line-height:1.7}
+.stats{gap:clamp(35px,8vw,110px)}.stats b{font-size:clamp(40px,6vw,65px)}.stats span{font-size:13px}
+.step{border-radius:18px;padding:20px 22px;box-shadow:0 8px 30px rgba(55,40,105,.05);font-weight:550}
+.step::before{box-shadow:0 6px 15px rgba(121,88,245,.25)}
+.endcta{background:radial-gradient(ellipse at 50% 110%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 65%)}
+footer.f{border-top:1px solid var(--border)}
+/* A calmer, richer workspace while keeping all existing controls. */
+aside{background:linear-gradient(165deg,color-mix(in srgb,var(--side) 89%,var(--accent)),var(--side) 45%);padding:18px;gap:12px;padding-top:calc(18px + env(safe-area-inset-top))}
+aside .brand{font-size:18px;letter-spacing:-.045em;margin-bottom:12px}
+.new{border:1px solid color-mix(in srgb,var(--accent) 24%,var(--border));background:color-mix(in srgb,var(--panel) 92%,var(--accent));padding:12px 14px;border-radius:14px;box-shadow:0 6px 20px rgba(95,70,170,.07)}
+.side-label{display:flex;justify-content:space-between;padding:14px 8px 0;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.14em}.side-label span{color:var(--accent)}
+#chats .chat{padding:10px;border-radius:11px}#chats .chat.active{box-shadow:inset 3px 0 0 var(--accent),0 5px 18px rgba(95,70,170,.08)}
+.foot{border-top:1px solid var(--border);padding-top:12px;gap:6px}.foot .ghost{padding:8px 6px;font-size:12px}
+main{background:radial-gradient(ellipse at 85% 0%,color-mix(in srgb,var(--accent) 11%,transparent),transparent 48%),radial-gradient(ellipse at 15% 100%,color-mix(in srgb,var(--accent2) 8%,transparent),transparent 40%),var(--bg)}
+header.top{padding-inline:22px;gap:12px;box-shadow:0 7px 30px rgba(30,20,80,.035)}
+header.top h1{max-width:190px;min-width:90px;letter-spacing:-.02em}
+.seg{min-width:0;flex:0 1 auto;scrollbar-width:thin;border-radius:12px;padding:4px;gap:2px}
+.seg button{border-radius:9px;padding:7px 12px;font-size:12px}.seg button.on{background:color-mix(in srgb,var(--accent) 18%,var(--panel));box-shadow:0 2px 9px rgba(95,70,170,.16);color:var(--text)}
+#mbtn{border-radius:12px;padding:9px 12px;font-size:12px}
+#feed{padding-top:32px}.wrap{max-width:820px;gap:22px}
+.bubble{padding:14px 18px;border-radius:18px;line-height:1.7;box-shadow:0 8px 30px rgba(50,35,100,.06)}
+.msg.user .bubble{background:linear-gradient(120deg,#7454dc,#b46ed3);border-radius:18px 18px 4px 18px}
+.msg.bot .bubble{border-radius:18px 18px 18px 4px}
+.av{width:36px;height:36px;border-radius:12px}.msg.bot .av{box-shadow:0 4px 18px rgba(121,88,245,.3)}
+.empty{max-width:680px}.empty .logo{width:76px;height:76px;border-radius:23px;box-shadow:0 12px 36px rgba(121,88,245,.3);margin-bottom:24px}
+.empty-label{font-size:10px;letter-spacing:.16em;font-weight:800;color:var(--accent);margin-bottom:10px}
+.empty h2{font-size:clamp(28px,3.5vw,42px);letter-spacing:-.05em;line-height:1.15}.empty p{margin-top:10px;font-size:14px}
+.chips{margin-top:26px;gap:9px}.chips button{font-size:12px;padding:11px 15px;border-radius:14px;text-align:left;box-shadow:0 6px 24px rgba(55,40,105,.06)}
+form{padding-inline:22px}.box{max-width:820px;border-radius:20px;padding:11px 11px 11px 19px;box-shadow:0 12px 40px rgba(60,40,120,.1)}
+.box:focus-within{box-shadow:0 0 0 3px rgba(121,88,245,.13),0 12px 40px rgba(60,40,120,.11)}
+#input:focus-visible{outline:none}
+#send{width:42px;height:42px;border-radius:14px;box-shadow:0 5px 16px rgba(121,88,245,.28)}
+dialog{border-radius:24px;box-shadow:0 28px 90px rgba(20,10,45,.32);padding:26px}dialog::backdrop{background:rgba(8,7,20,.66);backdrop-filter:blur(8px)}
+dialog h3{font-size:22px;letter-spacing:-.04em}dialog h4{margin-top:22px}
+:root[data-theme="dark"] .empty-label,:root[data-theme="dark"] .eyebrow{color:#bca9ff}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .empty-label,:root:not([data-theme="light"]) .eyebrow{color:#bca9ff}}
+@media(max-width:900px){.hero-layout{grid-template-columns:1fr;gap:0;min-height:auto}.hero-copy{max-width:620px}.hero-visual{min-height:270px;padding:10px 0 25px}.visual-label{top:20px}.preview{width:min(80%,420px)}.hero{min-height:auto;background-position:68% center}.hero::before{background:linear-gradient(90deg,rgba(8,9,21,.96),rgba(8,9,21,.58)),linear-gradient(0deg,#090b19,transparent 40%)}.hero-note{margin-top:34px}}
+@media(max-width:760px){nav{padding-inline:20px}.hero{padding-top:125px!important}.hero h1{font-size:clamp(46px,10vw,72px)}.hero-visual{min-height:245px}.preview{width:min(90%,390px)}.visual-label{display:none}header.top{padding-inline:12px;gap:8px}header.top h1{max-width:none}header.top .seg{order:3;flex-basis:100%;width:100%}header.top .mp{margin-left:auto}.empty{padding-inline:0}.chips{flex-direction:column;align-items:stretch}.chips button{text-align:center}.box{padding-left:14px}form{padding-inline:12px}.hint{display:none}}
+@media(max-width:420px){.hero h1{font-size:45px}.hero-actions{gap:19px}.hero-note{margin-top:27px}.hero-visual{min-height:225px}.preview{width:100%}.preview .body{min-height:145px}.hero .inner{padding:0 2px}#landing section:not(.hero){padding-block:72px}.foot .ghost{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.hero .inner{transform:none!important;opacity:1}.preview{transform:none!important}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+.oauth-divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:11px;margin:16px 0 12px;text-align:center}.oauth-divider::before,.oauth-divider::after{content:"";height:1px;flex:1;background:var(--border)}
+.github-login{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:650;padding:10px 14px}.github-login:disabled{opacity:.6;cursor:wait}
 </style>
 </head>
 <body>
@@ -243,14 +348,21 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 <div id="landing">
   <section class="hero" id="top">
     <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
-    <div class="inner">
-      <span class="badge reveal"><i></i>Free models, one clean chat</span>
-      <h1 class="reveal" style="--d:.1s">Talk to <span class="grad">AI models</span> from OpenRouter, NVIDIA and CodeCraft</h1>
-      <p class="reveal" style="--d:.2s">Pick a provider, pick a model, start chatting. Streaming replies, saved history and a layout that feels great on any screen.</p>
-      <div class="reveal" style="--d:.3s"><a class="cta big" href="#chat">Start chatting →</a></div>
-      <div class="preview reveal" style="--d:.45s">
-        <div class="bar"><i></i><i></i><i></i><em>Gemby AIs</em></div>
-        <div class="body"><div class="u" id="demoU"></div><div class="a" id="demoA"></div></div>
+    <div class="inner hero-layout">
+      <div class="hero-copy">
+        <span class="badge reveal"><i></i> YOUR SPACE FOR BIG IDEAS <span class="badge-star">✦</span></span>
+        <h1 class="reveal" style="--d:.1s">A little more <span class="grad">brilliance.</span><br>A lot more you.</h1>
+        <p class="reveal" style="--d:.2s">All your favorite AI models, one beautifully simple space. Ask anything. Make something amazing.</p>
+        <div class="hero-actions reveal" style="--d:.3s"><a class="cta big" href="#chat">Enter Gemby <span aria-hidden="true">↗</span></a><a class="hero-link" href="#providers">Explore models <span aria-hidden="true">↓</span></a></div>
+        <div class="hero-note reveal" style="--d:.35s"><span class="note-orb">✦</span><span>YOUR IDEAS, AMPLIFIED<br><small>One space. So many possibilities.</small></span></div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="visual-label"><span></span> YOUR CREATIVE ORBIT <b>01 / ∞</b></div>
+        <div class="preview reveal" style="--d:.45s">
+          <div class="bar"><span class="preview-spark">✦</span><strong>Gemby AIs</strong><em>YOUR AI SPACE</em><i></i></div>
+          <div class="body"><div class="u" id="demoU"></div><div class="a"><span class="preview-avatar">✦</span><span id="demoA"></span></div></div>
+          <div class="preview-footer"><span>✧</span> Think bigger, together. <span class="preview-arrow">↗</span></div>
+        </div>
       </div>
     </div>
     <div class="scrollcue"></div>
@@ -258,12 +370,13 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 
   <section id="providers">
     <div class="inner">
-      <h2 class="t reveal">Your models, one place</h2>
+      <div class="eyebrow reveal">✦ &nbsp; THE MODEL UNIVERSE</div><h2 class="t reveal">A universe of intelligence.<br><span class="grad">One home.</span></h2>
       <p class="sub reveal" style="--d:.08s">Switch between them in a click while you chat.</p>
       <div class="grid">
         <div class="card reveal left"><div class="ic">🛣️</div><h3>OpenRouter</h3><p>The free-tier model list loads live, so you always see what is currently available. Works directly from the browser.</p></div>
         <div class="card reveal right" style="--d:.1s"><div class="ic">🟩</div><h3>NVIDIA NIM</h3><p>Nemotron, Llama, Mistral and more from build.nvidia.com. Uses the small included proxy because NVIDIA blocks direct browser calls.</p></div>
         <div class="card reveal" style="--d:.2s"><div class="ic">✦</div><h3>CodeCraft</h3><p>Explore available models through a server-configured key. Available to signed-in accounts with confirmed email.</p></div>
+        <div class="card reveal" style="--d:.24s"><div class="ic">◈</div><h3>More ways to think</h3><p>Connect to Moduck, Bytez, or your own Puter account and discover more models.</p></div>
       </div>
     </div>
   </section>
@@ -282,7 +395,7 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 
   <section id="features">
     <div class="inner">
-      <h2 class="t reveal">Built to feel good</h2>
+      <div class="eyebrow reveal">✦ &nbsp; THOUGHTFUL BY DESIGN</div><h2 class="t reveal">The little things.<br><span class="grad">Done beautifully.</span></h2>
       <p class="sub reveal" style="--d:.08s">Small details that make daily use pleasant.</p>
       <div class="grid">
         <div class="card reveal"><div class="ic">⚡</div><h3>Live streaming</h3><p>Words appear as they are generated, with a stop button when you change your mind.</p></div>
@@ -297,19 +410,19 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 
   <section id="how">
     <div class="inner">
-      <h2 class="t reveal">Set up in a minute</h2>
-      <p class="sub reveal" style="--d:.08s">Use one API key for the AI provider you choose.</p>
+      <div class="eyebrow reveal">✦ &nbsp; LET’S GET STARTED</div><h2 class="t reveal">From idea to <span class="grad">aha.</span></h2>
+      <p class="sub reveal" style="--d:.08s">Sign in, choose your provider, and make yourself at home.</p>
       <div class="steps">
-        <div class="step reveal left">Get an API key for OpenRouter or NVIDIA NIM.</div>
-        <div class="step reveal right" style="--d:.1s">Create your account and sign in.</div>
-        <div class="step reveal left" style="--d:.2s">Open Settings, paste your one AI key, choose a model and chat.</div>
+        <div class="step reveal left">Create your Gemby account and sign in.</div>
+        <div class="step reveal right" style="--d:.1s">Pick a provider and connect a key or Puter account if needed.</div>
+        <div class="step reveal left" style="--d:.2s">Choose a model and bring your ideas to life.</div>
       </div>
     </div>
   </section>
 
   <section class="endcta">
     <div class="inner">
-      <h2 class="t reveal">Ready when you are</h2>
+      <div class="eyebrow reveal">✦ &nbsp; YOUR NEXT IDEA AWAITS</div><h2 class="t reveal">Let’s make <span class="grad">something brilliant.</span></h2>
       <div class="reveal" style="--d:.1s;margin-top:22px"><a class="cta big" href="#chat">Open the chat</a></div>
     </div>
   </section>
@@ -319,15 +432,16 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 <div id="app">
   <aside id="side">
     <div class="brand"><div class="logo"><img src="/icon.svg" alt=""></div>Gemby AIs</div>
-    <button class="new" id="new">＋ New chat</button>
+    <button class="new" id="new">+ New chat</button>
+    <div class="side-label">YOUR CONVERSATIONS <span>✦</span></div>
     <div id="chats"></div>
     <span class="sync-status" id="sync-status" role="status">Sign in to sync</span>
     <button class="ghost" id="sync-retry" type="button" hidden>Retry sync</button>
     <div class="foot">
       <button class="ghost" id="home">← Home</button>
-      <button class="ghost" id="theme" title="Toggle theme">◐</button>
+      <button class="ghost" id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
       <button class="ghost" id="account" title="Account">Account</button>
-      <button class="ghost" id="settings" title="Settings">⚙</button>
+      <button class="ghost" id="settings" title="Settings" aria-label="Settings">⚙</button>
     </div>
   </aside>
   <main>
@@ -340,11 +454,13 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
         <button data-p="codecraft">CodeCraft</button>
         <button data-p="moduck">Moduck</button>
         <button data-p="bytez">Bytez</button>
+        <button data-p="puter">Puter</button>
       </div>
       <div class="mp">
         <button class="ghost" id="mbtn" aria-haspopup="listbox"><span id="mname">Model</span> ▾</button>
         <div id="mpop" hidden>
-          <input id="msearch" placeholder="Search models…" autocomplete="off">
+          <input id="msearch" aria-label="Search models and specifications" placeholder="Search models or specs…" autocomplete="off">
+          <p class="model-note">Provider-reported specs, when available. Tool calling alone does not make a model an agent; Gemby features vary by provider; catalog input types do not imply Gemby supports them.</p>
           <div id="mlist" role="listbox"></div>
         </div>
       </div>
@@ -364,11 +480,12 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
 <div id="toast"></div>
 <dialog id="dlg">
   <h3>Settings</h3>
-  <p>OpenRouter and NVIDIA use one browser-supplied AI key at a time. CodeCraft, Moduck and Bytez use server keys for confirmed accounts. Connector credentials stay in this browser, unencrypted.</p>
+  <p>OpenRouter and NVIDIA use one browser-supplied AI key at a time. CodeCraft, Moduck and Bytez use server keys for confirmed accounts. Puter uses a separate Puter sign-in. Connector credentials stay in this browser, unencrypted.</p>
   <h4>AI provider key</h4>
   <label for="ai-key">API key for <span id="key-provider">OpenRouter</span></label><input id="ai-key" type="password" autocomplete="off" placeholder="Paste your provider API key">
   <p id="key-hint">Switching AI providers clears this key. Connectors may require their own separate credentials.</p>
   <p id="codecraft-status" role="status" hidden></p>
+  <div id="puter-connect-wrap" hidden><button class="ghost" id="puter-connect" type="button">Connect Puter</button> <span id="puter-status" role="status"></span><p>Puter uses its own account and usage limits or charges. Its sign-in is separate from Gemby and persists when you sign out here. Puter chat does not currently support MCP tools, connector proposals or web search in this app.</p></div>
   <h4>Web search</h4>
   <label><input id="web-search" type="checkbox" style="width:auto"> Enable OpenRouter web search</label>
   <p>OpenRouter may charge for searches, even with free models. The model decides when to search. This search option is available only with OpenRouter.</p>
@@ -410,7 +527,11 @@ header.top{position:relative;z-index:30;background:color-mix(in srgb,var(--panel
   </details>
   <label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="email">
   <label for="auth-password">Password</label><input id="auth-password" type="password" autocomplete="current-password">
+  <label><input id="auth-puter" type="checkbox" checked style="width:auto"> Also connect Puter when signing in with email</label>
+  <p>Puter uses a separate account and may open a sign-in popup. It can stay signed in even if Gemby sign-in fails. Puter usage may incur charges. After GitHub sign-in, connect Puter in Settings.</p>
   <div class="settings-actions"><button class="primary" id="auth-login" type="button">Sign in</button><button class="ghost" id="auth-signup" type="button">Create account</button></div>
+  <div class="oauth-divider"><span>or continue with</span></div>
+  <button class="ghost github-login" id="auth-github" type="button"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.82c.56.1.77-.24.77-.54v-2.08c-3.12.68-3.78-1.32-3.78-1.32-.51-1.3-1.25-1.65-1.25-1.65-1.02-.69.08-.68.08-.68 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.49-.28-5.11-1.25-5.11-5.56 0-1.23.44-2.24 1.16-3.03-.11-.28-.51-1.43.11-2.99 0 0 .95-.3 3.08 1.16a10.7 10.7 0 0 1 5.6 0c2.13-1.45 3.07-1.16 3.07-1.16.62 1.56.23 2.71.11 2.99.72.79 1.16 1.8 1.16 3.03 0 4.32-2.63 5.27-5.13 5.55.4.35.76 1.03.76 2.08v3.07c0 .3.21.65.77.54A11.2 11.2 0 0 0 12 .8Z"/></svg> Continue with GitHub</button>
   <div class="settings-actions"><button class="ghost" id="auth-reset" type="button">Reset password</button><button class="ghost" id="auth-retry" type="button" hidden>Retry loading account</button><button class="ghost" id="auth-update" type="button" hidden>Set new password</button><button class="ghost" id="auth-import" type="button" hidden>Import old browser chats</button><button class="ghost" id="auth-logout" type="button" hidden>Sign out</button><button class="ghost" id="auth-close" type="button">Close</button></div>
 </dialog>
 <script src="/auth.js"></script>
@@ -421,10 +542,18 @@ const store={
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}}
 };
 const OR_URL='https://openrouter.ai/api/v1';
+let githubCallback=new URL(location.href).searchParams.get('github_callback')==='1';
+const githubHash=new URLSearchParams(location.hash.slice(1));
+const githubCallbackFailed=githubCallback&&(githubHash.has('error')||new URL(location.href).searchParams.has('error'));
+function clearGithubCallback(){
+  const url=new URL(location.href);url.searchParams.delete('github_callback');url.searchParams.delete('error');url.searchParams.delete('error_code');url.searchParams.delete('error_description');url.hash='chat';
+  history.replaceState(null,'',url.pathname+url.search+url.hash);githubCallback=false;
+}
+if(githubCallbackFailed)clearGithubCallback();
 const FALLBACK={
   openrouter:['google/gemma-4-26b-a4b-it:free','nvidia/nemotron-3-ultra-550b-a55b:free','nvidia/nemotron-3.5-lightning:free'],
   nvidia:['nvidia/llama-3.1-nemotron-70b-instruct','nvidia/nemotron-3-super-120b-a12b','deepseek-ai/deepseek-v4.1-flash','mistralai/mistral-large-2-instruct'],
-  codecraft:[],moduck:[],bytez:[]
+  codecraft:[],moduck:[],bytez:[],puter:[]
 };
 const NOT_CHAT=/embed|guard|safety|reward|parse|retriev|rerank|deplot|fuyu|vlm|topic-control|nemoguard|clip|paligemma/i;
 
@@ -435,10 +564,13 @@ const DEFAULT_SKILLS=[
 ];
 const DEFAULT_CFG=()=>({provider:'openrouter',model:{},aiKey:'',webSearch:false,allowProposals:true,boxEnabled:false,boxToken:'',mcpConfig:{mcpServers:{}},skills:structuredClone(DEFAULT_SKILLS)});
 let chats=[],cur=null,cfg=DEFAULT_CFG();
-let models={openrouter:FALLBACK.openrouter.slice(),nvidia:FALLBACK.nvidia.slice(),codecraft:[],moduck:[],bytez:[]};
+let models={openrouter:FALLBACK.openrouter.slice(),nvidia:FALLBACK.nvidia.slice(),codecraft:[],moduck:[],bytez:[],puter:[]};
+let modelMetadata={openrouter:Object.create(null),nvidia:Object.create(null),codecraft:Object.create(null),moduck:Object.create(null),bytez:Object.create(null),puter:Object.create(null)};
 let codecraftConfigured=false,codecraftError='',codecraftCapabilities=Object.create(null);
 const extraShared={moduck:{configured:false,error:''},bytez:{configured:false,error:''}};
 const isShared=p=>['codecraft','moduck','bytez'].includes(p);
+const usesBrowserKey=p=>p==='openrouter'||p==='nvidia';
+let puterError='',puterLoadPromise=null,puterAuthorizedGeneration=-1,puterLoginAttempt=0,pendingPuterLogin=null;
 let busy=false,ctrl=null,accountClient=null,currentUser=null,accountReady=false,accountGeneration=0,saveQueue=Promise.resolve(),recoveryMode=false,syncFailed=false,accountConfigError='';
 const privateKey=id=>'gemby.private.'+id;
 const uid=()=>crypto.randomUUID();
@@ -473,24 +605,27 @@ async function applySession(session,event){
   const user=session?.user||null;
   if(user&&currentUser?.id===user.id&&accountReady)return;
   const generation=++accountGeneration;
-  ctrl?.abort();if($('dlg').open)$('dlg').close();for(const id of ['ai-key','box-token','mcp-token','mcp-json'])$(id).value='';currentUser=user;accountReady=false;models.codecraft=[];models.moduck=[];models.bytez=[];for(const p of ['moduck','bytez'])extraShared[p].error='';codecraftCapabilities=Object.create(null);codecraftError='';syncFailed=false;$('sync-retry').hidden=true;$('auth-retry').hidden=true;$('sync-status').textContent=user?'Loading account…':'Sign in to sync';chats=[];cur=null;cfg=DEFAULT_CFG();
+  ctrl?.abort();if($('dlg').open)$('dlg').close();for(const id of ['ai-key','box-token','mcp-token','mcp-json'])$(id).value='';currentUser=user;accountReady=false;models.codecraft=[];models.moduck=[];models.bytez=[];models.puter=[];for(const p of ['codecraft','moduck','bytez','puter'])modelMetadata[p]=Object.create(null);puterError='';for(const p of ['moduck','bytez'])extraShared[p].error='';codecraftCapabilities=Object.create(null);codecraftError='';syncFailed=false;$('sync-retry').hidden=true;$('auth-retry').hidden=true;$('sync-status').textContent=user?'Loading account…':'Sign in to sync';chats=[];cur=null;cfg=DEFAULT_CFG();
   $('account').textContent=user?'Account':'Sign in';renderAll();
-  if(!user){if(event==='SIGNED_OUT'){$('auth-email').value='';$('auth-password').value='';toast('Signed out.')}return;}
+  if(!user){if(githubCallback&&event==='INITIAL_SESSION'){clearGithubCallback();route();openAccount('GitHub sign-in did not complete. Please try again or check the provider setup.');}if(event==='SIGNED_OUT'){$('auth-email').value='';$('auth-password').value='';toast('Signed out.')}return;}
   $('auth-message').textContent='Loading your account…';
   let data,error;try{({data,error}=await accountClient.from('gemby_profiles').select('chats,settings').eq('user_id',user.id).maybeSingle())}catch(e){error=e}
   if(generation!==accountGeneration)return;
   if(error){$('auth-message').textContent='Could not load your account: '+error.message+'. Check the database setup.';$('auth-retry').hidden=false;openAccount();return;}
   const settings=data?.settings&&typeof data.settings==='object'?data.settings:{};
   const local=store.get(privateKey(user.id),{});
-  const provider=['openrouter','nvidia','codecraft','moduck','bytez'].includes(settings.provider)?settings.provider:'openrouter';
-  cfg=Object.assign(DEFAULT_CFG(),{provider,model:settings.model||{},webSearch:!!settings.webSearch,allowProposals:settings.allowProposals!==false,boxEnabled:!!settings.boxEnabled,skills:Array.isArray(settings.skills)?settings.skills:structuredClone(DEFAULT_SKILLS)}, {aiKey:local.provider===provider&&!isShared(provider)&&typeof local.aiKey==='string'?local.aiKey:'',boxToken:typeof local.boxToken==='string'?local.boxToken:'',mcpConfig:local.mcpConfig||{mcpServers:{}}});
+  const provider=['openrouter','nvidia','codecraft','moduck','bytez','puter'].includes(settings.provider)?settings.provider:'openrouter';
+  cfg=Object.assign(DEFAULT_CFG(),{provider,model:settings.model||{},webSearch:!!settings.webSearch,allowProposals:settings.allowProposals!==false,boxEnabled:!!settings.boxEnabled,skills:Array.isArray(settings.skills)?settings.skills:structuredClone(DEFAULT_SKILLS)}, {aiKey:local.provider===provider&&usesBrowserKey(provider)&&typeof local.aiKey==='string'?local.aiKey:'',boxToken:typeof local.boxToken==='string'?local.boxToken:'',mcpConfig:local.mcpConfig||{mcpServers:{}}});
   chats=Array.isArray(data?.chats)?data.chats:[];cur=chats[0]?.id||null;accountReady=true;$('sync-status').textContent='Synced';renderAll();loadModels();
   $('auth-message').textContent=recoveryMode?'Enter a new password below, then select Set new password.':'Signed in as '+(user.email||'your account')+'.';
+  finishPuterLogin();
+  if(githubCallback){clearGithubCallback();route();toast('Signed in with GitHub. Connect Puter in Settings if needed.');}
   $('auth-logout').hidden=false;
   $('auth-import').hidden=!Array.isArray(store.get('fw.chats',null))||!!store.get('gemby.imported.'+user.id,false);
   if($('auth-dlg').open&&!recoveryMode)$('auth-dlg').close();
 }
 function openAccount(message){
+  void loadPuter().catch(()=>{});
   if(!accountClient&&accountConfigError)message=accountConfigError;
   if(message)$('auth-message').textContent=message;
   $('auth-logout').hidden=!currentUser;
@@ -560,8 +695,8 @@ async function loadCodecraftModels(){
       if(!r.ok)throw explain(r.status,await r.text(),'CodeCraft');
       const j=await r.json();const items=Array.isArray(j.data)?j.data.filter(m=>m&&typeof m.id==='string'&&m.id.length>0&&(!m.type||m.type==='chat')):[];const ids=items.map(m=>m.id).sort();
       if(!ids.length)throw new UserError('CodeCraft returned no models.');
-      if(currentUser?.id===id&&generation===accountGeneration){models.codecraft=ids;codecraftCapabilities=Object.create(null);for(const item of items)codecraftCapabilities[item.id]=item.capabilities;codecraftError='';}
-    }catch(e){if(currentUser?.id===id&&generation===accountGeneration){models.codecraft=[];codecraftCapabilities=Object.create(null);codecraftError=e.message||'Could not load CodeCraft models.';}}
+      if(currentUser?.id===id&&generation===accountGeneration){models.codecraft=ids;modelMetadata.codecraft=Object.create(null);codecraftCapabilities=Object.create(null);for(const item of items)modelMetadata.codecraft[item.id]=item;for(const item of items)codecraftCapabilities[item.id]=item.capabilities;codecraftError='';}
+    }catch(e){if(currentUser?.id===id&&generation===accountGeneration){models.codecraft=[];modelMetadata.codecraft=Object.create(null);codecraftCapabilities=Object.create(null);codecraftError=e.message||'Could not load CodeCraft models.';}}
   }
   renderModels();
 }
@@ -577,28 +712,80 @@ async function loadExtraModels(p){
     const list=p==='bytez'?j.output:j.data;
     const ids=Array.isArray(list)?list.map(m=>p==='bytez'?m.modelId:m.id).filter(x=>typeof x==='string'&&x.length>0):[];
     if(!ids.length)throw new UserError('No models returned for '+p+'.');
-    if(currentUser?.id===id&&generation===accountGeneration){models[p]=[...new Set(ids)].sort();state.error='';}
-  }catch(e){if(currentUser?.id===id&&generation===accountGeneration){models[p]=[];state.error=e.message||'Could not load models.';}}
+    if(currentUser?.id===id&&generation===accountGeneration){models[p]=[...new Set(ids)].sort();modelMetadata[p]=Object.create(null);for(const item of list){const key=p==='bytez'?item?.modelId:item?.id;if(typeof key==='string')modelMetadata[p][key]=item;}state.error='';}
+  }catch(e){if(currentUser?.id===id&&generation===accountGeneration){models[p]=[];modelMetadata[p]=Object.create(null);state.error=e.message||'Could not load models.';}}
   renderModels();
+}
+function loadPuter(){
+  if(window.puter?.ai&&window.puter?.auth)return Promise.resolve(window.puter);
+  if(!puterLoadPromise)puterLoadPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');script.src='/puter.js';
+    script.onload=()=>window.puter?.ai&&window.puter?.auth?resolve(window.puter):reject(new Error('Puter SDK is unavailable.'));
+    script.onerror=()=>reject(new Error('Could not load Puter SDK.'));document.head.appendChild(script);
+  }).catch(e=>{puterLoadPromise=null;throw e});
+  return puterLoadPromise;
+}
+async function loadPuterModels(){
+  if(!currentUser||!accountReady)return;
+  const id=currentUser.id,generation=accountGeneration;
+  try{
+    const sdk=await loadPuter();if(currentUser?.id!==id||generation!==accountGeneration)return;
+    const list=await sdk.ai.listModels();
+    const ids=Array.isArray(list)?list.map(m=>m?.id).filter(x=>typeof x==='string'&&x.length>0):[];
+    if(!ids.length)throw new Error('Puter returned no chat models. Try again later.');
+    if(currentUser?.id===id&&generation===accountGeneration){models.puter=[...new Set(ids)].sort();modelMetadata.puter=Object.create(null);for(const item of list)if(typeof item?.id==='string'&&!modelMetadata.puter[item.id])modelMetadata.puter[item.id]=item;puterError='';}
+  }catch(e){if(currentUser?.id===id&&generation===accountGeneration){models.puter=[];modelMetadata.puter=Object.create(null);puterError=e.message||'Could not load Puter models.';}}
+  if(currentUser?.id===id&&generation===accountGeneration){renderModels();updatePuterStatus();}
+}
+function updatePuterStatus(){
+  const sdk=window.puter;
+  $('puter-connect').disabled=!sdk?.auth;
+  $('puter-status').textContent=puterError||(!sdk?.auth?'Loading Puter…':sdk.auth.isSignedIn()?(puterAuthorizedGeneration===accountGeneration?'Puter connected.':'A Puter session exists. Connect it to this Gemby session before use.'):'Connect and sign in to Puter to use its AI.');
 }
 async function loadModels(){
   if(cfg.provider==='codecraft')void loadCodecraftModels();
   else if(['moduck','bytez'].includes(cfg.provider))void loadExtraModels(cfg.provider);
+  else if(cfg.provider==='puter')void loadPuterModels();
   try{
     const r=await fetch(OR_URL+'/models');const j=await r.json();
-    const free=j.data.filter(m=>String(m.pricing?.prompt)==='0'&&String(m.pricing?.completion)==='0'&&(m.architecture?.output_modalities||['text']).every(x=>x==='text')).map(m=>m.id).sort();
-    if(free.length){models.openrouter=free;counts.free=free.length}
+    const entries=j.data.filter(m=>typeof m.id==='string'&&String(m.pricing?.prompt)==='0'&&String(m.pricing?.completion)==='0'&&(m.architecture?.output_modalities||['text']).every(x=>x==='text'));
+    const free=entries.map(m=>m.id).sort();
+    if(free.length){models.openrouter=free;modelMetadata.openrouter=Object.create(null);for(const item of entries)modelMetadata.openrouter[item.id]=item;counts.free=free.length}
   }catch{counts.free=models.openrouter.length}
   try{
     if(cfg.provider!=='nvidia'||!cfg.aiKey)throw new Error('No NVIDIA key');
     const r=await fetch('/api/nvidia/models',{headers:{Authorization:'Bearer '+cfg.aiKey}});
-    if(r.ok){const j=await r.json();const ids=j.data.map(m=>m.id).filter(i=>!NOT_CHAT.test(i)).sort();if(ids.length)models.nvidia=ids}
+    if(r.ok){const j=await r.json();const entries=j.data.filter(m=>typeof m.id==='string'&&!NOT_CHAT.test(m.id));const ids=entries.map(m=>m.id).sort();if(ids.length){models.nvidia=ids;modelMetadata.nvidia=Object.create(null);for(const item of entries)modelMetadata.nvidia[item.id]=item;}}
   }catch{}
   counts.nv=models.nvidia.length;
   renderModels();
   document.querySelectorAll('.stats .reveal.in').forEach(countUp);
 }
 const shortName=m=>String(m||'').split('/').pop().replace(':free','')+(String(m).endsWith(':free')?' · free':'');
+// Only show explicit catalog fields; model names and missing fields are not evidence of capabilities.
+function modelSpecs(p,id){
+  const m=modelMetadata[p]?.[id];if(!m)return ['Specs unavailable'];
+  const specs=[];
+  const number=v=>typeof v==='number'&&Number.isFinite(v)&&v>0?v:null;
+  const compact=n=>new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(n);
+  const context=number(m.context_length)??(p==='puter'?number(m.context):null);
+  const output=number(m.top_provider?.max_completion_tokens)??(p==='puter'?number(m.max_tokens):null);
+  const params=number(m.parameter_count)??number(m.num_parameters);
+  if(context)specs.push(compact(context)+' context tokens');
+  if(output)specs.push(compact(output)+' max output tokens');
+  if(params)specs.push(compact(params)+' parameters');
+  if(p==='openrouter'&&Array.isArray(m.supported_parameters)){
+    if(m.supported_parameters.includes('tools'))specs.push('Tool calling');
+    if(m.supported_parameters.includes('reasoning')||m.supported_parameters.includes('include_reasoning'))specs.push('Reasoning controls');
+  }
+  if(p==='codecraft'&&Array.isArray(m.capabilities)){
+    if(m.capabilities.includes('tools'))specs.push('Tool calling');
+    else specs.push('Tool calling not listed');
+  }
+  const input=m.architecture?.input_modalities;
+  if(Array.isArray(input)&&input.every(x=>typeof x==='string')&&input.length)specs.push('Input: '+input.join(', '));
+  return specs.length?specs:['Specs unavailable'];
+}
 function renderModels(){
   const p=cfg.provider,list=models[p];
   const sel=cfg.model[p]&&list.includes(cfg.model[p])?cfg.model[p]:list[0];
@@ -606,8 +793,8 @@ function renderModels(){
   $('mname').textContent=sel?shortName(sel):'Choose model';
   document.querySelectorAll('#prov button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   const q=$('msearch').value.trim().toLowerCase();
-  const items=list.filter(m=>m.toLowerCase().includes(q)).slice(0,500);
-  $('mlist').innerHTML=items.map(m=>`<button class="mi${m===sel?' on':''}" role="option" data-m="${esc(m)}"><b>${esc(shortName(m))}</b><small>${esc(m.includes('/')?m.split('/')[0]:'')}</small></button>`).join('')||'<p class="none">'+esc(p==='codecraft'&&codecraftError?codecraftError:extraShared[p]?.error||'No models match')+'</p>';
+  const items=list.filter(m=>(m+' '+modelSpecs(p,m).join(' ')).toLowerCase().includes(q)).slice(0,500);
+  $('mlist').innerHTML=items.map(m=>`<button class="mi${m===sel?' on':''}" role="option" aria-selected="${m===sel}" data-m="${esc(m)}"><span class="model-title"><b>${esc(shortName(m))}</b><small>${esc(m.includes('/')?m.split('/')[0]:(p==='puter'&&typeof modelMetadata[p]?.[m]?.provider==='string'?modelMetadata[p][m].provider:''))}</small></span><small class="model-specs">${esc(modelSpecs(p,m).join(' · '))}</small></button>`).join('')||'<p class="none">'+esc(p==='codecraft'&&codecraftError?codecraftError:p==='puter'&&puterError?puterError:extraShared[p]?.error||'No models match')+'</p>';
   buildTrack();
 }
 function buildTrack(){
@@ -647,7 +834,7 @@ function renderChat(){
   const c=active();$('wrap').innerHTML='';
   $('title').textContent=c?c.title:'New chat';
   if(!c||!c.msgs.length){
-    $('wrap').innerHTML=`<div class="empty"><div class="logo"><img src="/icon.svg" alt=""></div><h2>What can I help with?</h2><p>Pick a provider and model above, then ask anything.</p>
+    $('wrap').innerHTML=`<div class="empty"><div class="logo"><img src="/icon.svg" alt=""></div><div class="empty-label">✦ &nbsp; YOUR CREATIVE SPACE</div><h2>What shall we <span class="grad">dream up?</span></h2><p>Choose your model, find your flow, and start creating.</p>
     <div class="chips">${['Explain how neural networks learn','Write a Python function to merge two sorted lists','Give me 5 project ideas for a weekend'].map(x=>`<button data-chip="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
     return;
   }
@@ -658,6 +845,7 @@ function renderAll(){renderList();renderChat();renderModels()}
 
 /* ---------- API ---------- */
 function endpoint(){
+  if(cfg.provider==='puter')return{name:'Puter',hasKey:true,headers:{}};
   if(['moduck','bytez'].includes(cfg.provider)){const p=cfg.provider;return{url:'/api/'+p+'/chat/completions',key:'',hasKey:extraShared[p].configured,sessionAuth:true,name:p==='moduck'?'Moduck':'Bytez',headers:{}};}
   if(cfg.provider==='codecraft')return{url:'/api/codecraft/chat/completions',key:'',hasKey:codecraftConfigured,sessionAuth:true,name:'CodeCraft',headers:{}};
   if(cfg.provider==='openrouter')return{url:OR_URL+'/chat/completions',key:cfg.aiKey,hasKey:!!cfg.aiKey,name:'OpenRouter',
@@ -752,19 +940,57 @@ function proposeConnector(proposal){
   if(!confirm('Add this connector, initially disabled?\n\nName: '+name+'\nURL: '+url.href+'\n\nIt will not connect until you enable it in Settings. Do not approve unknown servers.'))return 'User denied the connector proposal.';
   cfg.mcpConfig=config;saveCfg();return 'Connector saved disabled. The user must enable it in Settings before use.';
 }
+function waitForPuter(promise,signal){
+  if(signal.aborted)return Promise.reject(new DOMException('Stopped','AbortError'));
+  return new Promise((resolve,reject)=>{
+    const abort=()=>reject(new DOMException('Stopped','AbortError'));
+    signal.addEventListener('abort',abort,{once:true});
+    Promise.resolve(promise).then(value=>{signal.removeEventListener('abort',abort);resolve(value)},error=>{signal.removeEventListener('abort',abort);reject(error)});
+  });
+}
+async function streamPuter(messages,model,bub,signal,checkAccount){
+  let sdk;try{sdk=await waitForPuter(loadPuter(),signal)}catch(e){if(e.name==='AbortError')throw e;throw new UserError('Could not load Puter.','Check your connection and try again.');}
+  checkAccount();
+  if(!sdk.auth.isSignedIn()||puterAuthorizedGeneration!==accountGeneration)throw new UserError('Sign in to Puter first.','Open Settings and choose Connect Puter for this Gemby account.');
+  let iterator;
+  try{
+    const pending=sdk.ai.chat(messages,{model,stream:true});
+    // If stopped before the SDK returns its stream, close it as soon as it arrives.
+    Promise.resolve(pending).then(r=>{if(signal.aborted&&r?.[Symbol.asyncIterator]){const i=r[Symbol.asyncIterator]();Promise.resolve(i.return?.()).catch(()=>{})}},()=>{});
+    const response=await waitForPuter(pending,signal);checkAccount();
+    if(!response?.[Symbol.asyncIterator])throw new UserError('Puter did not return a text stream.','Try another model.');
+    iterator=response[Symbol.asyncIterator]();let text='',reason='';
+    for(;;){
+      const item=await waitForPuter(iterator.next(),signal);checkAccount();if(item.done)break;
+      const part=item.value;if(part?.type==='error')throw new UserError('Puter: '+(part.message||'Stream failed.'));
+      if(typeof part?.text==='string')text+=part.text;
+      if(part?.type==='reasoning'&&typeof part.reasoning==='string')reason+=part.reasoning;
+      if(part?.type==='tool_use')throw new UserError('Puter tool calls are not supported in this app.');
+      bub.classList.toggle('caret',true);bub.innerHTML=(reason?thinkHTML(reason):'')+(text?md(text):'');if(nearBottom())toBottom();
+    }
+    bub.classList.toggle('caret',false);if(!text.trim())throw new UserError('Puter returned an empty text reply.','Try another model.');
+    return {content:text,reasoning:reason};
+  }catch(e){
+    if(iterator&&e.name==='AbortError')Promise.resolve(iterator.return?.()).catch(()=>{});
+    if(e.name==='AbortError'||e instanceof UserError)throw e;
+    throw new UserError('Puter request failed: '+(e.message||'unknown error'),'Check Puter sign-in, model access and usage limits.');
+  }
+}
 async function stream(history,bub,expectedGeneration){
   const checkAccount=()=>{if(expectedGeneration!==undefined&&expectedGeneration!==accountGeneration)throw new DOMException('Account changed','AbortError')};
   await serverConfigPromise;checkAccount();
   const ep=endpoint(),model=cfg.model[cfg.provider];
   if(!ep.hasKey)throw new UserError(`No ${ep.name} API key yet.`,ep.sessionAuth?'Configure the provider key in Vercel.':'Add your own API key in Settings.');
   if(ep.sessionAuth&&(!model||!models[cfg.provider].includes(model)))throw new UserError('No '+ep.name+' model is available yet.','Check the model list, account access, and Vercel configuration.');
+  if(cfg.provider==='puter'&&(!model||!models.puter.includes(model)))throw new UserError('No Puter model is available yet.','Check the model list and try again.');
   if(!model)throw new UserError('No model selected.');
   if(cfg.webSearch&&cfg.provider!=='openrouter')throw new UserError('Web search is only available with OpenRouter.','Switch providers or turn off web search in Settings.');
   ctrl=new AbortController();
   const messages=history.map(m=>({role:m.role,content:m.content}));
   const skills=parseSkills(JSON.stringify(cfg.skills||[])).filter(s=>s.enabled);
   if(skills.length)messages.unshift({role:'system',content:'User-selected skills (instructions):\n\n'+skills.map(s=>s.name+':\n'+s.instructions).join('\n\n')});
-  if(cfg.provider==='moduck'&&(cfg.boxEnabled||Object.values(cfg.mcpConfig?.mcpServers||{}).some(s=>!s.disabled)))throw new UserError('Moduck text chat does not support connector tools.','Disable connectors for this request.');
+  if((cfg.provider==='moduck'||cfg.provider==='puter')&&(cfg.boxEnabled||Object.values(cfg.mcpConfig?.mcpServers||{}).some(s=>!s.disabled)))throw new UserError(cfg.provider+' chat does not support connector tools in this app.','Disable connectors for this request.');
+  if(cfg.provider==='puter')return streamPuter(messages,model,bub,ctrl.signal,checkAccount);
   const servers=[];
   if(cfg.boxEnabled){bub.textContent='Connecting to Simular box…';servers.push({name:'Simular box',connection:await connectBox(cfg.boxToken,ctrl.signal)});checkAccount();}
   const mcp=parseMcpConfig(JSON.stringify(cfg.mcpConfig||{mcpServers:{}}));
@@ -873,7 +1099,7 @@ $('menu').onclick=()=>$('side').classList.toggle('open');
 $('home').onclick=()=>{location.hash='top'};
 $('down').onclick=toBottom;
 $('feed').addEventListener('scroll',()=>$('down').classList.toggle('show',!nearBottom()),{passive:true});
-$('prov').onclick=e=>{const b=e.target.closest('button');if(!b||!requireAccount())return;if(cfg.provider!==b.dataset.p){if(cfg.aiKey&&!confirm('Switching provider clears your current AI key. Continue?'))return;cfg.provider=b.dataset.p;cfg.aiKey='';saveCfg();toast(isShared(cfg.provider)?'Using the server key for confirmed accounts.':'Add a key for the selected provider.')}renderModels();if(isShared(cfg.provider))loadModels()};
+$('prov').onclick=e=>{const b=e.target.closest('button');if(!b||!requireAccount())return;if(cfg.provider!==b.dataset.p){if(cfg.aiKey&&!confirm('Switching provider clears your current AI key. Continue?'))return;cfg.provider=b.dataset.p;cfg.aiKey='';saveCfg();toast(cfg.provider==='puter'?'Connect Puter in Settings.':isShared(cfg.provider)?'Using the server key for confirmed accounts.':'Add a key for the selected provider.')}renderModels();if(isShared(cfg.provider)||cfg.provider==='puter')loadModels()};
 $('mbtn').onclick=e=>{e.stopPropagation();const h=$('mpop').hidden;$('mpop').hidden=!h;if(h){$('msearch').value='';renderModels();$('msearch').focus()}};
 $('msearch').oninput=renderModels;
 $('msearch').onkeydown=e=>{if(e.key==='Enter'){const f=$('mlist').querySelector('.mi');if(f)f.click()}};
@@ -924,6 +1150,37 @@ $('auth-import').onclick=async()=>{
   if(syncFailed){$('auth-message').textContent='Import is in this browser session but failed to sync. Retry by editing a chat.';return;}
   store.set('gemby.imported.'+id,true);$('auth-message').textContent='Imported and synced '+imported.length+' chats.';
 };
+// Both providers authenticate independently; a popup must start directly from the click.
+function finishPuterLogin(){
+  const pending=pendingPuterLogin;
+  if(!pending||pending.attempt!==puterLoginAttempt||!accountReady||!currentUser||!pending.userId||pending.userId!==currentUser.id||accountGeneration!==pending.startGeneration+1||!pending.done)return;
+  pendingPuterLogin=null;
+  if(pending.ok&&window.puter?.auth?.isSignedIn()){
+    puterAuthorizedGeneration=accountGeneration;toast('Puter connected.');
+  }else toast('Gemby signed in. Connect Puter in Settings if needed.');
+  if(cfg.provider==='puter')updatePuterStatus();
+}
+function signInWithPuter(){
+  const attempt=++puterLoginAttempt,startGeneration=accountGeneration;
+  pendingPuterLogin=null;
+  const wantsPuter=$('auth-puter').checked&&!currentUser&&accountClient&&$('auth-email').value.trim()&&$('auth-password').value;
+  let connect;
+  if(wantsPuter){
+    const sdk=window.puter;
+    try{connect=sdk?.auth?Promise.resolve(sdk.auth.isSignedIn()?undefined:sdk.auth.signIn()):Promise.reject(new Error('Puter is still loading'));}
+    catch(e){connect=Promise.reject(e);}
+    // Handle rejection immediately while the independent Gemby sign-in is running.
+    connect=connect.then(()=>true,()=>false);
+  }
+  authAction('login').then(result=>{
+    if(!wantsPuter||!result||attempt!==puterLoginAttempt)return;
+    const userId=result.data?.user?.id||result.data?.session?.user?.id;
+    if(!userId||accountGeneration>startGeneration+1)return;
+    const pending={attempt,startGeneration,userId,done:false,ok:false};pendingPuterLogin=pending;
+    connect.then(ok=>{if(pendingPuterLogin!==pending||attempt!==puterLoginAttempt)return;pending.done=true;pending.ok=ok;finishPuterLogin();});
+    finishPuterLogin();
+  });
+}
 async function authAction(action){
   await serverConfigPromise;
   if(!accountClient){$('auth-message').textContent=accountConfigError||'Account client is not ready.';return;}
@@ -942,16 +1199,38 @@ async function authAction(action){
     if(action==='reset')$('auth-message').textContent='If that email is registered, check your inbox for a reset link.';
     if(action==='update'){recoveryMode=false;$('auth-update').hidden=true;$('auth-message').textContent='Password updated.';}
     if(action==='logout'){$('auth-logout').hidden=true;$('auth-message').textContent='Signed out.';}
-  }catch(e){$('auth-message').textContent=e.message||'Account action failed.';}
+    return result;
+  }catch(e){$('auth-message').textContent=e.message||'Account action failed.';return null;}
 }
-$('auth-login').onclick=()=>authAction('login');$('auth-signup').onclick=()=>authAction('signup');$('auth-reset').onclick=()=>authAction('reset');$('auth-update').onclick=()=>authAction('update');$('auth-logout').onclick=()=>authAction('logout');
+$('auth-github').onclick=async()=>{
+  const button=$('auth-github');if(button.disabled)return;button.disabled=true;
+  try{
+    await serverConfigPromise;
+    if(!accountClient)throw new Error(accountConfigError||'Account client is not ready.');
+    if(currentUser){ctrl?.abort();await saveQueue;if(syncFailed&&!confirm('Changes could not be synced. Continue and risk losing them?'))return;}
+    puterLoginAttempt++;pendingPuterLogin=null;
+    $('auth-message').textContent='Redirecting to GitHub…';
+    const {error}=await accountClient.auth.signInWithOAuth({provider:'github',options:{redirectTo:location.origin+location.pathname+'?github_callback=1'}});
+    if(error)throw error;
+  }catch(e){$('auth-message').textContent='Could not sign in with GitHub: '+(e?.message||'Please try again.');}
+  finally{button.disabled=false;}
+};
+$('auth-login').onclick=signInWithPuter;$('auth-signup').onclick=()=>authAction('signup');$('auth-reset').onclick=()=>authAction('reset');$('auth-update').onclick=()=>authAction('update');$('auth-logout').onclick=()=>{puterLoginAttempt++;pendingPuterLogin=null;return authAction('logout')};
 $('theme').onclick=()=>{
   const root=document.documentElement;
   const dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
   root.dataset.theme=dark?'light':'dark';store.set('fw.theme',root.dataset.theme);
 };
 const th=store.get('fw.theme',null);if(th)document.documentElement.dataset.theme=th;
-$('settings').onclick=()=>{if(!requireAccount())return;$('ai-key').value=isShared(cfg.provider)?'':cfg.aiKey;$('ai-key').disabled=isShared(cfg.provider);$('key-provider').textContent=cfg.provider==='openrouter'?'OpenRouter':cfg.provider==='nvidia'?'NVIDIA NIM':cfg.provider==='codecraft'?'CodeCraft':cfg.provider==='moduck'?'Moduck':'Bytez';$('key-hint').textContent=isShared(cfg.provider)?$('key-provider').textContent+' uses the Vercel server key for confirmed accounts; usage may incur charges. No key is entered here.':'Switching AI providers clears this key. Connectors may require their own separate credentials.';$('codecraft-status').hidden=!isShared(cfg.provider);const state=cfg.provider==='codecraft'?{configured:codecraftConfigured,error:codecraftError}:extraShared[cfg.provider];$('codecraft-status').textContent=state?'Vercel: key '+(state.configured?'configured':'missing')+'. Presence only; access and validity are not verified.'+(state.error?' '+state.error:''):'';$('web-search').checked=cfg.webSearch;$('allow-proposals').checked=cfg.allowProposals!==false;$('box-enabled').checked=cfg.boxEnabled;$('box-token').value=cfg.boxToken;$('box-status').textContent='';$('mcp-status').textContent='';$('settings-error').textContent='';$('mcp-name').value='';$('mcp-url').value='';$('mcp-token').value='';$('mcp-json').value=JSON.stringify(cfg.mcpConfig||{mcpServers:{}},null,2);renderMcpToggles();$('skills-json').value=JSON.stringify(cfg.skills||DEFAULT_SKILLS,null,2);renderSkillToggles();$('dlg').showModal()};
+$('settings').onclick=()=>{if(!requireAccount())return;$('ai-key').value=usesBrowserKey(cfg.provider)?cfg.aiKey:'';$('ai-key').disabled=!usesBrowserKey(cfg.provider);$('key-provider').textContent=cfg.provider==='openrouter'?'OpenRouter':cfg.provider==='nvidia'?'NVIDIA NIM':cfg.provider==='codecraft'?'CodeCraft':cfg.provider==='moduck'?'Moduck':cfg.provider==='bytez'?'Bytez':'Puter';$('key-hint').textContent=cfg.provider==='puter'?'Puter uses its own sign-in; no API key is entered here.':isShared(cfg.provider)?$('key-provider').textContent+' uses the Vercel server key for confirmed accounts; usage may incur charges. No key is entered here.':'Switching AI providers clears this key. Connectors may require their own separate credentials.';$('codecraft-status').hidden=!isShared(cfg.provider);const state=cfg.provider==='codecraft'?{configured:codecraftConfigured,error:codecraftError}:extraShared[cfg.provider];$('codecraft-status').textContent=state?'Vercel: key '+(state.configured?'configured':'missing')+'. Presence only; access and validity are not verified.'+(state.error?' '+state.error:''):'';$('puter-connect-wrap').hidden=cfg.provider!=='puter';if(cfg.provider==='puter')updatePuterStatus();$('web-search').checked=cfg.webSearch;$('allow-proposals').checked=cfg.allowProposals!==false;$('box-enabled').checked=cfg.boxEnabled;$('box-token').value=cfg.boxToken;$('box-status').textContent='';$('mcp-status').textContent='';$('settings-error').textContent='';$('mcp-name').value='';$('mcp-url').value='';$('mcp-token').value='';$('mcp-json').value=JSON.stringify(cfg.mcpConfig||{mcpServers:{}},null,2);renderMcpToggles();$('skills-json').value=JSON.stringify(cfg.skills||DEFAULT_SKILLS,null,2);renderSkillToggles();$('dlg').showModal()};
+$('puter-connect').onclick=()=>{
+  const sdk=window.puter;if(!sdk?.auth){$('puter-status').textContent='Puter is still loading. Try again shortly.';return;}
+  const generation=accountGeneration;
+  $('puter-connect').disabled=true;$('puter-status').textContent='Connecting to Puter…';
+  // Call signIn synchronously from the click handler to avoid popup blockers.
+  try{Promise.resolve(sdk.auth.isSignedIn()?undefined:sdk.auth.signIn()).then(()=>{if(generation!==accountGeneration)return;puterAuthorizedGeneration=generation;updatePuterStatus();if(cfg.provider==='puter')loadPuterModels();},e=>{if(generation===accountGeneration)$('puter-status').textContent='Puter sign-in failed: '+(e?.message||e?.msg||'Cancelled or popup blocked.');}).finally(()=>{$('puter-connect').disabled=false});}
+  catch(e){$('puter-connect').disabled=false;$('puter-status').textContent='Puter sign-in failed: '+(e.message||'Please try again.');}
+};
 $('box-test').onclick=async()=>{if(busy){$('box-status').textContent='Wait for the current reply to finish.';return}const b=$('box-test');b.disabled=true;$('box-status').textContent='Connecting…';try{const box=await connectBox($('box-token').value.trim());$('box-status').textContent='Connected: '+box.tools.length+' tools available.'}catch(e){$('box-status').textContent=e.message}finally{b.disabled=false}};
 function renderSkillToggles(){
   const container=$('skill-toggles');container.replaceChildren();
@@ -981,10 +1260,11 @@ $('s-cancel').onclick=()=>$('dlg').close();
 $('s-save').onclick=()=>{
   let mcpConfig,skills;try{mcpConfig=parseMcpConfig($('mcp-json').value);skills=parseSkills($('skills-json').value)}catch(e){$('settings-error').textContent=e.message;return}
   cfg.mcpConfig=mcpConfig;cfg.skills=skills;
-  cfg.aiKey=isShared(cfg.provider)?'':$('ai-key').value.trim();cfg.webSearch=$('web-search').checked;cfg.allowProposals=$('allow-proposals').checked;cfg.boxEnabled=$('box-enabled').checked;cfg.boxToken=$('box-token').value.trim();
+  cfg.aiKey=usesBrowserKey(cfg.provider)?$('ai-key').value.trim():'';cfg.webSearch=$('web-search').checked;cfg.allowProposals=$('allow-proposals').checked;cfg.boxEnabled=$('box-enabled').checked;cfg.boxToken=$('box-token').value.trim();
   saveCfg();$('dlg').close();loadModels();
 };
 renderModels();route();loadModels();
+if(githubCallbackFailed)setTimeout(()=>openAccount('GitHub sign-in was cancelled or failed. Please try again and check the GitHub provider setup.'),0);
 </script>
 </body>
 </html>

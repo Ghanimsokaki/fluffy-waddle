@@ -124,13 +124,13 @@ function handler(req, res) {
     res.writeHead(404); return res.end('Not found');
   }
   // Serve only public assets, never the repository or server source.
-  if (!['GET', 'HEAD'].includes(req.method) || !['/', '/index.html', '/icon.svg', '/auth.js', '/schema.sql'].includes(url.pathname)) {
+  if (!['GET', 'HEAD'].includes(req.method) || !['/', '/index.html', '/icon.svg', '/auth.js', '/puter.js', '/schema.sql', '/gemby-cosmos.jpg'].includes(url.pathname)) {
     res.writeHead(404); return res.end('Not found');
   }
-  const file = url.pathname === '/icon.svg' ? path.join(ROOT,'icon.svg') : url.pathname === '/auth.js' ? path.join(ROOT,'public','auth.js') : url.pathname === '/schema.sql' ? path.join(ROOT,'supabase','schema.sql') : path.join(ROOT,'index.html');
+  const file = url.pathname === '/icon.svg' ? path.join(ROOT,'icon.svg') : url.pathname === '/auth.js' ? path.join(ROOT,'public','auth.js') : url.pathname === '/puter.js' ? path.join(ROOT,'public','puter.js') : url.pathname === '/gemby-cosmos.jpg' ? path.join(ROOT,'assets','gemby-cosmos.jpg') : url.pathname === '/schema.sql' ? path.join(ROOT,'supabase','schema.sql') : path.join(ROOT,'index.html');
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(500); return res.end('Could not load app'); }
-    res.writeHead(200, { 'content-type': url.pathname === '/icon.svg' ? 'image/svg+xml' : url.pathname === '/auth.js' ? 'text/javascript; charset=utf-8' : url.pathname === '/schema.sql' ? 'text/plain; charset=utf-8' : 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin' });
+    res.writeHead(200, { 'content-type': url.pathname === '/gemby-cosmos.jpg' ? 'image/jpeg' : url.pathname === '/icon.svg' ? 'image/svg+xml' : (url.pathname === '/auth.js' || url.pathname === '/puter.js') ? 'text/javascript; charset=utf-8' : url.pathname === '/schema.sql' ? 'text/plain; charset=utf-8' : 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin' });
     res.end(req.method === 'HEAD' ? undefined : data);
   });
 }

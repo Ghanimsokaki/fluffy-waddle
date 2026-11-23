@@ -3,4 +3,6 @@ const esbuild = require('esbuild');
 fs.mkdirSync('public', { recursive: true });
 for (const file of ['index.html', 'icon.svg']) fs.copyFileSync(file, `public/${file}`);
 fs.copyFileSync('supabase/schema.sql', 'public/schema.sql');
+fs.copyFileSync('assets/gemby-cosmos.jpg', 'public/gemby-cosmos.jpg');
 esbuild.buildSync({entryPoints:['auth-entry.js'], bundle:true, minify:true, platform:'browser', format:'iife', outfile:'public/auth.js'});
+esbuild.buildSync({entryPoints:['puter-entry.js'], bundle:true, minify:true, platform:'browser', format:'iife', outfile:'public/puter.js'});
