@@ -15,6 +15,8 @@ async function serverTest(fn) {
 test('only public assets are served and cross-origin proxy requests are rejected', async () => {
   await serverTest(async base => {
     assert.equal((await fetch(base + '/')).status, 200);
+    const art=await fetch(base+'/gemby-cosmos.jpg');assert.equal(art.status,200);assert.match(art.headers.get('content-type'),/image\/jpeg/);
+    const puter=await fetch(base+'/puter.js');assert.equal(puter.status,200);assert.match(puter.headers.get('content-type'),/javascript/);
     const schema=await fetch(base+'/schema.sql');assert.equal(schema.status,200);assert.match(await schema.text(),/enable row level security/i);
     for (const file of ['/server.js', '/.git/config', '/README.md', '/%2e%2e/server.js']) assert.equal((await fetch(base + file)).status, 404);
     assert.equal((await fetch(base + '/api/box', {method:'POST', headers:{origin:'https://evil.example'}})).status, 403);
@@ -227,7 +229,7 @@ function setupAccounts(profileLoader) {
     select(){return {eq(_field,id){return {maybeSingle:()=>profileLoader(id)}}}},
     upsert(snapshot){writes.push(snapshot);return Promise.resolve({error:null})}
   }}};
-  const ctx={$,FALLBACK:{openrouter:[],nvidia:[]},store:{get:(k,d)=>values.has(k)?values.get(k):d,set:(k,v)=>values.set(k,structuredClone(v))},fetch:()=>new Promise(()=>{}),window:{},structuredClone,crypto:require('node:crypto').webcrypto,renderAll(){},loadModels(){},toast(){},setTimeout,console};
+  const ctx={$,FALLBACK:{openrouter:[],nvidia:[]},store:{get:(k,d)=>values.has(k)?values.get(k):d,set:(k,v)=>values.set(k,structuredClone(v))},fetch:()=>new Promise(()=>{}),window:{},structuredClone,crypto:require('node:crypto').webcrypto,renderAll(){},loadModels(){},loadPuter:()=>Promise.resolve(),finishPuterLogin(){},githubCallback:false,toast(){},setTimeout,console};
   vm.createContext(ctx);vm.runInContext(source,ctx);ctx.mock=mock;vm.runInContext('accountClient=mock',ctx);
   return {ctx,values,writes,elements};
 }
@@ -326,7 +328,7 @@ test('CodeCraft provider setting is restored per account without reusing a brows
 test('saved CodeCraft model is preserved while the live model list is loading',()=>{
   const html=fs.readFileSync('index.html','utf8');const source=html.slice(html.indexOf('const shortName='),html.indexOf('function buildTrack()'));
   const elements={mname:{textContent:''},msearch:{value:''},mlist:{innerHTML:''}};
-  const ctx={cfg:{provider:'codecraft',model:{codecraft:'saved-sonnet'}},models:{codecraft:[]},codecraftError:'',extraShared:{},document:{querySelectorAll:()=>[]},$:id=>elements[id],esc:x=>x,buildTrack:()=>{}};
+  const ctx={cfg:{provider:'codecraft',model:{codecraft:'saved-sonnet'}},models:{codecraft:[]},modelMetadata:{codecraft:{}},codecraftError:'',extraShared:{},document:{querySelectorAll:()=>[]},$:id=>elements[id],esc:x=>x,buildTrack:()=>{}};
   vm.createContext(ctx);vm.runInContext(source,ctx);ctx.renderModels();
   assert.equal(ctx.cfg.model.codecraft,'saved-sonnet');assert.equal(elements.mname.textContent,'Choose model');
   ctx.models.codecraft=['another-model','saved-sonnet'];ctx.renderModels();assert.equal(elements.mname.textContent,'saved-sonnet');
